@@ -3,6 +3,7 @@
 namespace Modules\Brand\Services;
 
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Modules\Brand\Http\Entities\Brand;
 use Modules\Brand\Http\Transformers\BrandResource;
@@ -26,17 +27,20 @@ class BrandService
     public function list($request): JsonResponse
     {
         $params = $request->all();
-        $query = $this->model->query()->select(['id', 'name', 'image', 'is_active', 'sort_order']);
+        $cacheKey = 'brands_list_' . md5(serialize($params));
 
-        $query = filterLike($query, ['name'], $params);
+        $data = Cache::remember($cacheKey,config('cache.brand_list_cache_time'), function () use ($params) {
+            $query = $this->model->query()->select(['id', 'name', 'image', 'is_active', 'sort_order']);
+            $query = filterLike($query, ['name'], $params);
 
-        if (isset($params['is_active'])) {
-            $query->where('is_active', $params['is_active']);
-        }else{
-            $query->where('is_active', 1);
-        }
+            if (isset($params['is_active'])) {
+                $query->where('is_active', $params['is_active']);
+            } else {
+                $query->where('is_active', 1);
+            }
 
-        $data = $query->orderBy('created_at', 'desc')->paginate(20);
+            return $query->orderBy('created_at', 'desc')->paginate(20);
+        });
 
         return response()->json([
             'success' => 200,
@@ -52,18 +56,17 @@ class BrandService
     }
 
     /**
-     * @param int $id
-     * @return JsonResponse
+     * Brand details
      */
     public function details(int $id): JsonResponse
     {
         try {
-            $category = $this->model->findOrFail($id);
+            $brand = $this->model->findOrFail($id);
 
             return response()->json([
                 'success' => 200,
                 'message' => __('Brand details retrieved successfully.'),
-                'data' => BrandResource::make($category),
+                'data' => BrandResource::make($brand),
             ]);
 
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
@@ -76,8 +79,7 @@ class BrandService
     }
 
     /**
-     * @param $request
-     * @return JsonResponse
+     * Add brand
      */
     public function add($request): JsonResponse
     {
@@ -92,21 +94,22 @@ class BrandService
             }
 
             $image->storeAs('brands', $imageName, 'public');
-
             $validated['image'] = 'brands/' . $imageName;
         }
 
-        return handleTransaction(
+        $brand = handleTransaction(
             fn() => $this->model->create($validated)->refresh(),
             'Brand added successfully.',
             BrandResource::class
         );
+
+        Cache::forget('brands_list_*');
+
+        return $brand;
     }
 
     /**
-     * @param $request
-     * @param int $id
-     * @return JsonResponse
+     * Update brand
      */
     public function update($request, int $id): JsonResponse
     {
@@ -124,7 +127,7 @@ class BrandService
             $validated['image'] = 'brands/' . $imageName;
         }
 
-        return handleTransaction(
+        $brand = handleTransaction(
             function () use ($validated, $id) {
                 $brand = $this->model->findOrFail($id);
                 $brand->update($validated);
@@ -133,22 +136,28 @@ class BrandService
             'Brand updated successfully.',
             BrandResource::class
         );
+
+        Cache::forget('brands_list_*');
+
+        return $brand;
     }
 
     /**
-     * @param int $id
-     * @return JsonResponse
+     * Delete brand
      */
     public function delete(int $id): JsonResponse
     {
-        return handleTransaction(
+        $response = handleTransaction(
             function () use ($id) {
-                $category = $this->model->findOrFail($id);
-                $category->delete();
-                return $category;
+                $brand = $this->model->findOrFail($id);
+                $brand->delete();
+                return $brand;
             },
             'Brand deleted successfully.'
         );
-    }
 
+        Cache::forget('brands_list_*');
+
+        return $response;
+    }
 }
