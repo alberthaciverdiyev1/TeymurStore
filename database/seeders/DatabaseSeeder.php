@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Modules\Brand\Database\Seeders\BrandDatabaseSeeder;
 use Modules\Category\Database\Seeders\CategoryDatabaseSeeder;
+use Modules\Color\Database\Seeders\ColorDatabaseSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -20,6 +21,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             CategoryDatabaseSeeder::class,
             BrandDatabaseSeeder::class,
+            ColorDatabaseSeeder::class,
         ]);
     }
 }

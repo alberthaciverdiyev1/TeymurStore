@@ -1,5 +1,6 @@
 {
     "User": true,
     "Category": true,
-    "Brand": true
+    "Brand": true,
+    "Color": true
 }
