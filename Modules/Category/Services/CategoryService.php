@@ -3,6 +3,7 @@
 namespace Modules\Category\Services;
 
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Storage;
 use Modules\Category\Http\Entities\Category;
 use Modules\Category\Http\Transformers\CategoryResource;
 
@@ -68,6 +69,19 @@ class CategoryService
     public function add($request): JsonResponse
     {
         $validated = $request->validated();
+
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            $imageName = time() . '_' . $image->getClientOriginalName();
+
+            if (!Storage::disk('public')->exists('categories')) {
+                Storage::disk('public')->makeDirectory('categories', 0755, true);
+            }
+
+            $image->storeAs('categories', $imageName, 'public');
+
+            $validated['image'] = 'categories/' . $imageName;
+        }
 
         return handleTransaction(
             fn() => $this->model->create($validated),
