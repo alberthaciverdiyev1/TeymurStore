@@ -112,17 +112,28 @@ class BrandService
     {
         $validated = $request->validated();
 
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            $imageName = time() . '_' . $image->getClientOriginalName();
+
+            if (!Storage::disk('public')->exists('brands')) {
+                Storage::disk('public')->makeDirectory('brands', 0755, true);
+            }
+
+            $image->storeAs('brands', $imageName, 'public');
+            $validated['image'] = 'brands/' . $imageName;
+        }
+
         return handleTransaction(
             function () use ($validated, $id) {
-                $category = $this->model->findOrFail($id);
-                $category->update($validated);
-                return $category;
+                $brand = $this->model->findOrFail($id);
+                $brand->update($validated);
+                return $brand->refresh();
             },
             'Brand updated successfully.',
             BrandResource::class
         );
     }
-
 
     /**
      * @param int $id

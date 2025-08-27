@@ -99,11 +99,22 @@ class CategoryService
     {
         $validated = $request->validated();
 
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            $imageName = time() . '_' . $image->getClientOriginalName();
+
+            if (!Storage::disk('public')->exists('categories')) {
+                Storage::disk('public')->makeDirectory('categories', 0755, true);
+            }
+            $image->storeAs('categories', $imageName, 'public');
+            $validated['image'] = 'categories/' . $imageName;
+        }
+
         return handleTransaction(
             function () use ($validated, $id) {
                 $category = $this->model->findOrFail($id);
                 $category->update($validated);
-                return $category;
+                return $category->refresh();
             },
             'Category updated successfully.',
             CategoryResource::class
