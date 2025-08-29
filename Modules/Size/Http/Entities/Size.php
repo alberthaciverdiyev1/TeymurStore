@@ -5,40 +5,27 @@ namespace Modules\Size\Http\Entities;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Modules\Product\Http\Entities\Product;
 use Modules\Size\Database\Factories\SizeFactory;
+use Spatie\Translatable\HasTranslations;
 
 class Size extends Model
 {
-    use SoftDeletes, HasFactory;
-
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
+    use SoftDeletes, HasFactory, HasTranslations;
     protected $table = 'sizes';
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
-    protected $fillable = [
-        'name',
-        'icon',
-        'is_active',
-        'sort_order',
-    ];
+    public array $translatable = ['name'];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
+    protected $guarded = [];
+
     protected $casts = [
-
+        'name' => 'array',
     ];
 
+    public function products()
+    {
+        return $this->belongsToMany(Product::class);
+    }
     public static function newFactory(): SizeFactory
     {
         return SizeFactory::new();

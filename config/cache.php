@@ -107,6 +107,7 @@ return [
     'brand_list_cache_time' => env('BRAND_LIST_CACHE_TIME', 43200),
     'color_list_cache_key' => env('COLOR_LIST_CACHE_KEY', 43200),
     'size_list_cache_time'=>env('SIZE_LIST_CACHE_TIME', 43200),
+    'product_list_cache_time'=>env('PRODUCT_LIST_CACHE_TIME', 43200),
 
 
 ];

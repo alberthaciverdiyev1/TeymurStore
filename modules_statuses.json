@@ -3,5 +3,6 @@
     "Category": true,
     "Brand": true,
     "Color": true,
-    "Size": true
+    "Size": true,
+    "Product": true
 }
