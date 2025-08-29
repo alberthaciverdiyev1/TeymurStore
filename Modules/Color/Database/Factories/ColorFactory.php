@@ -11,7 +11,7 @@ class ColorFactory extends \Illuminate\Database\Eloquent\Factories\Factory
     public function definition(): array
     {
         return [
-            'name' => $this->faker->colorName(),
+            'name' => $this->faker->unique()->colorName(),
             'hex' => $this->faker->hexColor(),
             'is_active' => $this->faker->boolean(),
             'sort_order' => $this->faker->numberBetween(0, 100),

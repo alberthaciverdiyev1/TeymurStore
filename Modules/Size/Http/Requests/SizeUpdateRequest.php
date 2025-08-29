@@ -1,11 +1,11 @@
 <?php
 
-namespace Modules\Color\Http\Requests;
+namespace Modules\Size\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class ColorUpdateRequest extends FormRequest
+class SizeUpdateRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -14,16 +14,16 @@ class ColorUpdateRequest extends FormRequest
 
     public function rules(): array
     {
-        $colorId = $this->route('id');
-
+        $sizeId = (int) $this->route('id');
         return [
             'name' => [
+                "sometimes",
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('colors', 'name')->ignore($colorId, 'id'),
+                Rule::unique('sizes', 'name')->ignore($sizeId, 'id'),
             ],
-            'hex' => ['nullable', 'string'],
+            'image' => ['nullable', 'string'],
             'is_active' => ['nullable', 'boolean'],
             'sort_order' => ['nullable', 'integer', 'min:1'],
         ];

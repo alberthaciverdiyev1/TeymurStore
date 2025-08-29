@@ -12,6 +12,6 @@ class ColorDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-       Color::factory()->count(200)->create();
+       Color::factory()->count(20)->create();
     }
 }
