@@ -126,7 +126,6 @@ class ProductService
             return $product->refresh();
         }, 'Product added successfully.', ProductResource::class);
 
-        // Cache temizleme
         Cache::forget('products_list_all');
 
         return $product;
@@ -135,24 +134,59 @@ class ProductService
     /**
      * Update product
      */
+    /**
+     * Update product
+     */
     public function update($request, int $id): JsonResponse
     {
-        $validated = $request->validated();
+        dd("aaa");
+        $data = $request->validated();
 
-        $product = handleTransaction(
-            function () use ($validated, $id) {
-                $product = $this->model->findOrFail($id);
-                $product->update($validated);
-                return $product->refresh();
-            },
-            'Product updated successfully.',
-            ProductResource::class
-        );
+        $product = handleTransaction(function () use ($data, $request, $id) {
+            $product = $this->model->findOrFail($id);
 
-        Cache::forget('products_list_*');
+            $images_arr = $request->hasFile('images') ? $request->file('images') : [];
+
+            // Translations
+            $translations = [
+                'title'       => $data['title'] ?? $product->title,
+                'description' => $data['description'] ?? $product->description,
+            ];
+            unset($data['title'], $data['description'], $data['images']);
+
+            $product->update($data);
+
+            $product->update($translations);
+
+            // Colors sync
+            if (array_key_exists('colors', $data)) {
+                $product->colors()->sync($data['colors'] ?? []);
+            }
+
+            // Sizes sync
+            if (array_key_exists('sizes', $data)) {
+                $product->sizes()->sync($data['sizes'] ?? []);
+            }
+
+            if (!empty($images_arr)) {
+                $product->images()->delete();
+
+                $images = [];
+                foreach ($images_arr as $image) {
+                    $path = $image->store('products', 'public');
+                    $images[] = ['image_path' => $path];
+                }
+                $product->images()->createMany($images);
+            }
+
+            return $product->refresh();
+        }, 'Product updated successfully.', ProductResource::class);
+
+        Cache::forget('products_list_all');
 
         return $product;
     }
+
 
     /**
      * Delete product
