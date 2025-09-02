@@ -13,7 +13,17 @@ enum Gender: int
         return match ($this) {
             self::MALE => __('Male'),
             self::FEMALE => __('Female'),
-            self::FEMALE => __('Female'),
+            self::KIDS => __('Kids'),
+        };
+    }
+
+    public static function fromInt(int $value): self
+    {
+        return match ($value) {
+            0 => self::MALE,
+            1 => self::FEMALE,
+            2 => self::KIDS,
+            default => throw new \InvalidArgumentException("Invalid Gender value: {$value}"),
         };
     }
 }
