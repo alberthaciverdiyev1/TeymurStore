@@ -4,5 +4,6 @@
     "Brand": true,
     "Color": true,
     "Size": true,
-    "Product": true
+    "Product": true,
+    "Setting": true
 }

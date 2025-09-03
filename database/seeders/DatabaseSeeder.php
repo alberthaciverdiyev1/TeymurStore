@@ -10,6 +10,7 @@ use Modules\Brand\Database\Seeders\BrandDatabaseSeeder;
 use Modules\Category\Database\Seeders\CategoryDatabaseSeeder;
 use Modules\Color\Database\Seeders\ColorDatabaseSeeder;
 use Modules\Product\Database\Seeders\ProductDatabaseSeeder;
+use Modules\Setting\Database\Seeders\SettingDatabaseSeeder;
 use Modules\Size\Database\Seeders\SizeDatabaseSeeder;
 use Modules\User\Database\Seeders\UserDatabaseSeeder;
 
@@ -22,6 +23,7 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
         $this->call([
+            SettingDatabaseSeeder::class,
             CategoryDatabaseSeeder::class,
             BrandDatabaseSeeder::class,
             ColorDatabaseSeeder::class,
