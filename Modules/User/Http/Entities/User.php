@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Modules\Product\Http\Entities\Product;
 use Modules\User\Database\Factories\UserFactory;
 
 class User extends  Authenticatable
@@ -54,4 +55,27 @@ class User extends  Authenticatable
     {
         return UserFactory::new();
     }
+
+    public function favorites()
+    {
+        return $this->belongsToMany(
+            Product::class,
+            'user_favorites',
+            'user_id',
+            'product_id'
+        )->withTimestamps();
+    }
+
+    public function cartItems()
+    {
+        return $this->belongsToMany(
+            Product::class,
+            'user_carts',
+            'user_id',
+            'product_id'
+        )
+            ->withPivot('quantity')
+            ->withTimestamps();
+    }
+
 }

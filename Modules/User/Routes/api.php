@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Modules\User\Http\Controllers\AuthController;
+use Modules\User\Http\Controllers\FavoritesController;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,7 +16,6 @@ use Modules\User\Http\Controllers\AuthController;
 */
 
 
-
 Route::prefix('auth')->controller(AuthController::class)->group(function () {
     Route::post('register', 'register')->name('auth.register');
     Route::post('login', 'login')->name('auth.login');
@@ -26,3 +26,11 @@ Route::prefix('auth')->controller(AuthController::class)->group(function () {
         Route::post('reset-password', 'resetPassword')->name('auth.resetPassword');
     });
 });
+
+Route::prefix('favorite')->middleware('auth:sanctum')->controller(FavoritesController::class)->group(function () {
+    Route::get('/', 'list')->name('favorite.list');
+    Route::post('/{id}', 'add')->name('favorite.add');
+    Route::delete('/{id}', 'delete')->name('favorite.delete');
+});
+
+
