@@ -72,4 +72,9 @@ class Product extends Model
     {
         return config('product.fallback_locale', 'az');
     }
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Model::class, 'product_id', 'id')
+            ->setTable('product_reviews');
+    }
 }
