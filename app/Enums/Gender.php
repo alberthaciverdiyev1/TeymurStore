@@ -26,4 +26,14 @@ enum Gender: int
             default => throw new \InvalidArgumentException("Invalid Gender value: {$value}"),
         };
     }
+
+    public static function fromString(string $value): self
+    {
+        return match (strtolower($value)) {
+            'male'   => self::MALE,
+            'female' => self::FEMALE,
+            'kids'   => self::KIDS,
+            default  => throw new \InvalidArgumentException("Invalid Gender string: {$value}"),
+        };
+    }
 }

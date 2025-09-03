@@ -2,6 +2,7 @@
 
 namespace Modules\Product\Services;
 
+use App\Enums\Gender;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Modules\Product\Http\Entities\Product;
@@ -30,35 +31,44 @@ class ProductService
         $params = $request->all();
         $locale = app()->getLocale();
 
-        $query = Product::query()
-            ->with(['colors', 'sizes', 'images', 'category', 'brand']);
+        $query = Product::query()->with(['colors', 'sizes', 'images', 'category', 'brand']);
 
-        // Aktiv / discount
-        rangeFilter($query, 'is_active', $params);
+        if (isset($params['is_active'])) {
+            $query->where('is_active', $params['is_active']);
+        } else {
+            $query->where('is_active', 1);
+        }
+
         if (!empty($params['discount'])) {
             $query->whereNotNull('discount');
         }
 
-        // Category, brand, gender
-        whereEach($query, ['category_id', 'brand_id', 'gender'], $params);
+        if (!empty($params['gender']) && in_array($params['gender'], ['male', 'female', 'kids'])) {
+            $query->where('gender', Gender::fromString($params['gender'])->value);
+        }
 
-        // Price aralığı
         rangeFilter($query, 'price', $params);
 
-        // Rəng və ölçü (pivot table)
+        if (!empty($params['category_ids']) && is_array($params['category_ids'])) {
+            $query->whereIn('category_id', $params['category_ids']);
+        }
+
+        if (!empty($params['brand_ids']) && is_array($params['brand_ids'])) {
+            $query->whereIn('brand_id', $params['brand_ids']);
+        }
+
         if (!empty($params['color_ids']) && is_array($params['color_ids'])) {
             $query->whereHas('colors', fn($q) => $q->whereIn('colors.id', $params['color_ids']));
         }
+
         if (!empty($params['size_ids']) && is_array($params['size_ids'])) {
             $query->whereHas('sizes', fn($q) => $q->whereIn('sizes.id', $params['size_ids']));
         }
 
-        // Axtarış title/description bütün dillərdə
         if (!empty($params['search'])) {
-            filterLike($query, ['title', 'description'], $params); // filterLike artıq bütün dillərdə axtarır
+            filterLike($query, ['title', 'description'], $params);
         }
 
-        // Sıralama
         orderBy($query, $params);
 
         $data = $query->paginate(20);
@@ -121,23 +131,18 @@ class ProductService
             ];
             unset($data['title'], $data['description'], $data['images']);
 
-            // Product oluştur
             $product = $this->model->create($data);
 
-            // Translations update et
             $product->update($translations);
 
-            // Colors sync
             if (!empty($data['colors'])) {
                 $product->colors()->sync($data['colors']);
             }
 
-            // Sizes sync
             if (!empty($data['sizes'])) {
                 $product->sizes()->sync($data['sizes']);
             }
 
-            // Images upload
             if (!empty($images_arr) && is_array($images_arr)) {
                 $images = [];
                 foreach ($images_arr as $image) {
