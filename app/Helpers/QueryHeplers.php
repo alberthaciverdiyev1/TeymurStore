@@ -75,16 +75,47 @@ if (!function_exists('orderBy')) {
 
 
 if (!function_exists('filterLike')) {
+
     function filterLike(Builder $query, array|string $columns, array $params): Builder
+    {
+        if (!is_array($columns)) {
+            $columns = [$columns];
+        }
+
+        if (empty($params['search'])) {
+            return $query;
+        }
+
+        $search = strtolower($params['search']);
+
+        $locales = config('app.available_locales', ['az', 'en', 'ru', 'tr']);
+
+        $query->where(function ($q) use ($columns, $search, $locales) {
+            foreach ($columns as $column) {
+                $q->orWhere(function ($q2) use ($column, $search, $locales) {
+                    foreach ($locales as $locale) {
+                        $q2->orWhere("{$column}->{$locale}", 'like', "%{$search}%");
+                    }
+                });
+            }
+        });
+
+        return $query;
+    }
+
+}
+
+if (!function_exists('whereEach')) {
+    function whereEach(Builder $query, array|string $columns, array $params): Builder
     {
         if (is_array($columns)) {
             foreach ($columns as $column) {
                 if (!empty($params[$column])) {
-                    $query->where($column, 'like', '%' . $params[$column] . '%');
+                    $query->where($column, '=', $params[$column]);
                 }
             }
         } elseif (is_string($columns) && !empty($params[$columns])) {
-            $query->where($columns, 'like', '%' . $params[$columns] . '%');
+            $query->where($columns, '=', $params[$columns]);
         }
 
         return $query;

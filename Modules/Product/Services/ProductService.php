@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Cache;
 use Modules\Product\Http\Entities\Product;
 use Modules\Product\Http\Entities\ProductImage;
 use Modules\Product\Http\Resources\ProductResource;
+use Illuminate\Support\Str;
 
 class ProductService
 {
@@ -28,20 +29,39 @@ class ProductService
     {
         $params = $request->all();
         $locale = app()->getLocale();
-        $cacheKey = 'products_list_' . md5(serialize($params) . $locale);
 
-        $data = Cache::remember($cacheKey, config('cache.product_list_cache_time'), function () use ($params) {
-            $query = Product::query()
-                ->with(['colors', 'sizes', 'images', 'category', 'brand']);
+        $query = Product::query()
+            ->with(['colors', 'sizes', 'images', 'category', 'brand']);
 
-            if (isset($params['is_active'])) {
-                $query->where('is_active', $params['is_active']);
-            } else {
-                $query->where('is_active', 1);
-            }
+        // Aktiv / discount
+        rangeFilter($query, 'is_active', $params);
+        if (!empty($params['discount'])) {
+            $query->whereNotNull('discount');
+        }
 
-            return $query->orderBy('created_at', 'desc')->paginate(20);
-        });
+        // Category, brand, gender
+        whereEach($query, ['category_id', 'brand_id', 'gender'], $params);
+
+        // Price aralığı
+        rangeFilter($query, 'price', $params);
+
+        // Rəng və ölçü (pivot table)
+        if (!empty($params['color_ids']) && is_array($params['color_ids'])) {
+            $query->whereHas('colors', fn($q) => $q->whereIn('colors.id', $params['color_ids']));
+        }
+        if (!empty($params['size_ids']) && is_array($params['size_ids'])) {
+            $query->whereHas('sizes', fn($q) => $q->whereIn('sizes.id', $params['size_ids']));
+        }
+
+        // Axtarış title/description bütün dillərdə
+        if (!empty($params['search'])) {
+            filterLike($query, ['title', 'description'], $params); // filterLike artıq bütün dillərdə axtarır
+        }
+
+        // Sıralama
+        orderBy($query, $params);
+
+        $data = $query->paginate(20);
 
         return response()->json([
             'success' => 200,
@@ -84,9 +104,13 @@ class ProductService
     /**
      * Add product
      */
+
     public function add($request): JsonResponse
     {
         $data = $request->validated();
+
+        $data['title'] = array_map(static fn($v) => Str::lower($v), $data['title'] ?? []);
+        $data['description'] = array_map(static fn($v) => Str::lower($v), $data['description'] ?? []);
 
         $product = handleTransaction(function () use ($data, $request) {
             $images_arr = $request->hasFile('images') ? $request->file('images') : [];
@@ -139,8 +163,9 @@ class ProductService
      */
     public function update($request, int $id): JsonResponse
     {
-        dd("aaa");
         $data = $request->validated();
+        $data['title'] = array_map(fn($v) => Str::lower($v), $data['title'] ?? []);
+        $data['description'] = array_map(fn($v) => Str::lower($v), $data['description'] ?? []);
 
         $product = handleTransaction(function () use ($data, $request, $id) {
             $product = $this->model->findOrFail($id);
@@ -149,7 +174,7 @@ class ProductService
 
             // Translations
             $translations = [
-                'title'       => $data['title'] ?? $product->title,
+                'title' => $data['title'] ?? $product->title,
                 'description' => $data['description'] ?? $product->description,
             ];
             unset($data['title'], $data['description'], $data['images']);
