@@ -4,15 +4,18 @@ namespace Modules\User\Http\Entities;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Modules\Product\Http\Entities\Product;
+use Modules\Product\Http\Entities\Review;
 use Modules\User\Database\Factories\UserFactory;
 
-class User extends  Authenticatable
+class User extends Authenticatable
 {
     use HasFactory, HasApiTokens;
+
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
@@ -51,7 +54,7 @@ class User extends  Authenticatable
         ];
     }
 
-    public static function newFactory():UserFactory
+    public static function newFactory(): UserFactory
     {
         return UserFactory::new();
     }
@@ -76,6 +79,11 @@ class User extends  Authenticatable
         )
             ->withPivot('quantity')
             ->withTimestamps();
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
     }
 
 }

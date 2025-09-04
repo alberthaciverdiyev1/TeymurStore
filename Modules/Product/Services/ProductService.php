@@ -93,7 +93,7 @@ class ProductService
     {
         try {
             $product = $this->model->with([
-                'colors', 'sizes', 'images', 'category', 'user', 'brand'
+                'colors', 'sizes', 'images', 'category', 'brand','reviews.user'
             ])->findOrFail($id);
 
             return response()->json([

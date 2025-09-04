@@ -74,7 +74,6 @@ class Product extends Model
     }
     public function reviews(): HasMany
     {
-        return $this->hasMany(Model::class, 'product_id', 'id')
-            ->setTable('product_reviews');
+        return $this->hasMany(Review::class);
     }
 }

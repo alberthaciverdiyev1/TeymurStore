@@ -34,6 +34,7 @@ class ProductResource extends JsonResource
             'images' => ProductImageResource::collection($this->whenLoaded('images')),
             'category' => new CategoryResource($this->whenLoaded('category')),
             'user' => new UserResource($this->whenLoaded('user')),
+            'reviews' => ReviewResource::collection($this->whenLoaded('reviews')),
         ];
     }
 }

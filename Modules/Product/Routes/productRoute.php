@@ -1,0 +1,12 @@
+<?php
+
+Route::prefix('product')->controller(\Modules\Product\Http\Controllers\ProductController::class)->group(function () {
+    Route::get('/', 'list')->name('product.list');
+    Route::get('/{id}', 'details')->name('product.details');
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/', 'add')->name('product.add');
+        Route::put('/{id}', 'update')->name('product.update');
+        Route::delete('/{id}', 'delete')->name('product.delete');
+    });
+});
