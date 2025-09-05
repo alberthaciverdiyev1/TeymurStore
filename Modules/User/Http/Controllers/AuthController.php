@@ -48,6 +48,10 @@ class AuthController extends Controller
 
     public function resetPassword(Request $request)
     {
-        $this->service->resetPassword($request);
+        return $this->service->resetPassword($request);
+    }
+    public function changePassword(Request $request)
+    {
+        return $this->service->changePassword($request);
     }
 }

@@ -182,6 +182,7 @@ class AuthService
      */
     public function resetPassword(Request $request)
     {
+
         $validated = $request->validate([
             'email' => 'required|email|exists:users,email',
             'otpCode' => 'required|digits:4',
@@ -191,14 +192,13 @@ class AuthService
         $otpCheck = OtpEmail::where([
             'email' => $validated['email'],
             'otp_code' => $validated['otpCode']
-        ])
-            ->where('deactive_date', '>', now())
-            ->first();
+        ])->where('deactive_date', '>', now())->first();
+
 
         if (!$otpCheck) {
             return response()->json([
                 'status' => StatusCode::HTTP_FORBIDDEN,
-                'message' => StatusCode::$statusTexts[StatusCode::HTTP_FORBIDDEN]
+                'message' => 'OTP code is invalid or expired'
             ], StatusCode::HTTP_FORBIDDEN);
         }
 
@@ -207,10 +207,43 @@ class AuthService
         $user->save();
 
         $otpCheck->delete();
+        $user->tokens()->delete();
+        $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
             'status' => StatusCode::HTTP_OK,
-            'message' => StatusCode::$statusTexts[StatusCode::HTTP_OK]
+            'message' => "Password reset successfully"
         ], StatusCode::HTTP_OK);
     }
+
+    /**
+     * Change Password
+     */
+    public function changePassword(Request $request)
+    {
+        $validated = $request->validate([
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:6|confirmed'
+        ]);
+
+        $user = $request->user();
+
+        if (!Hash::check($validated['current_password'], $user->password)) {
+            return response()->json([
+                'status' => StatusCode::HTTP_FORBIDDEN,
+                'message' => 'Current password is incorrect'
+            ], StatusCode::HTTP_FORBIDDEN);
+        }
+
+        $user->password = Hash::make($validated['new_password']);
+        $user->save();
+        $user->tokens()->delete();
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'status' => StatusCode::HTTP_OK,
+            'message' => 'Password changed successfully'
+        ], StatusCode::HTTP_OK);
+    }
+
 }
