@@ -47,6 +47,7 @@ class ReviewService
     public function add($request): JsonResponse
     {
         $validated = $request->validated();
+
         return handleTransaction(
             fn() => $this->model->create($validated)->refresh(),
             'Review added successfully.',

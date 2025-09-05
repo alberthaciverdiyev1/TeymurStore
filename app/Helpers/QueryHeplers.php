@@ -66,7 +66,7 @@ if (!function_exists('orderBy')) {
         } else if (!empty($params['order_by']) && empty($params['order_type'])) {
             $query->orderBy($params['order_by'], 'desc');
         } else {
-            $query->orderBy('updated_at', 'desc');
+            $query->orderBy('created_at', 'desc');
         }
 
         return $query;

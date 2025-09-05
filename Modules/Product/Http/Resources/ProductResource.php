@@ -21,6 +21,8 @@ class ProductResource extends JsonResource
             'description'=>$this->description,
             'id' => $this->id,
             'sku' => $this->sku,
+            'rate'=>$this->rate,
+            'rate_count'=>$this->rate_count,
             'brand' => new BrandResource($this->whenLoaded('brand')),
             'gender' => $this->gender !== null ? Gender::fromInt($this->gender)->label() : null,
             'price' => $this->price,

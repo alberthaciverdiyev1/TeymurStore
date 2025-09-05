@@ -6,14 +6,14 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class ReviewAddRequest extends FormRequest
 {
-    public function authorize()
+    public function authorize():bool
     {
         return true;
     }
 
     public function prepareForValidation()
     {
-        return $this->merge([
+        $this->merge([
             'user_id' => auth()->id()
         ]);
     }
@@ -21,10 +21,10 @@ class ReviewAddRequest extends FormRequest
     public function rules()
     {
         return [
-            'product_id' => 'required,exists:products,id',
-            'rating' => 'required,between:1,5',
+            'product_id' => 'required|exists:products,id',
+            'rate' => 'required|numeric|between:1,5',
             'comment' => 'nullable|string',
-            'user_id' => 'nullable|exists:users,id'
+            'user_id' => 'required|exists:users,id',
         ];
     }
 }
