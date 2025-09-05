@@ -31,68 +31,53 @@ class ProductService
         $params = $request->all();
         $locale = app()->getLocale();
 
-        // Product-ları lazımi relation-larla götür və review ortalaması və count əlavə et
         $query = Product::query()
             ->with(['colors', 'sizes', 'images', 'category', 'brand'])
             ->withAvg('reviews', 'rate')
             ->withCount('reviews');
 
-        // Aktiv məhsullar
         if (isset($params['is_active'])) {
             $query->where('is_active', $params['is_active']);
         } else {
             $query->where('is_active', 1);
         }
 
-        // Endirimli məhsullar
         if (!empty($params['discount'])) {
             $query->whereNotNull('discount');
         }
 
-        // Gender filter
         if (!empty($params['gender']) && in_array($params['gender'], ['male', 'female', 'kids'])) {
             $query->where('gender', Gender::fromString($params['gender'])->value);
         }
 
-        // Qiymət aralığı filter
         rangeFilter($query, 'price', $params);
 
-        // Category filter
         if (!empty($params['category_ids']) && is_array($params['category_ids'])) {
             $query->whereIn('category_id', $params['category_ids']);
         }
 
-        // Brand filter
         if (!empty($params['brand_ids']) && is_array($params['brand_ids'])) {
             $query->whereIn('brand_id', $params['brand_ids']);
         }
 
-        // Color filter
         if (!empty($params['color_ids']) && is_array($params['color_ids'])) {
             $query->whereHas('colors', fn($q) => $q->whereIn('colors.id', $params['color_ids']));
         }
 
-        // Size filter
         if (!empty($params['size_ids']) && is_array($params['size_ids'])) {
             $query->whereHas('sizes', fn($q) => $q->whereIn('sizes.id', $params['size_ids']));
         }
 
-        // Search filter
         if (!empty($params['search'])) {
             filterLike($query, ['title', 'description'], $params);
         }
 
-        // Order by
         orderBy($query, $params);
 
-        // Pagination
         $data = $query->paginate(20);
 
-        // Query ilə gələn reviews_avg_rate null-dursa 5 qoy və review sayını əlavə et
         $data->getCollection()->transform(function ($product) {
-            $product->rate = $product->reviews_avg_rate !== null
-                ? round($product->reviews_avg_rate, 2)
-                : 0;
+            $product->rate = $product->reviews_avg_rate !== null ? round($product->reviews_avg_rate, 2) : 0;
 
             $product->rate_count = $product->reviews_count;
             return $product;
@@ -102,7 +87,6 @@ class ProductService
             'success' => 200,
             'message' => __('Products retrieved successfully.'),
             'data' => ProductResource::collection($data),
-            //'data' => $data,
             'meta' => [
                 'current_page' => $data->currentPage(),
                 'last_page' => $data->lastPage(),

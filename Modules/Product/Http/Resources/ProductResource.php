@@ -37,6 +37,7 @@ class ProductResource extends JsonResource
             'category' => new CategoryResource($this->whenLoaded('category')),
             'user' => new UserResource($this->whenLoaded('user')),
             'reviews' => ReviewResource::collection($this->whenLoaded('reviews')),
+            'created_at' => $this->created_at?->format('Y-m-d H:i:s'),
         ];
     }
 }
