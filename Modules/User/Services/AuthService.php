@@ -52,8 +52,10 @@ class AuthService
                 ]
             );
 
-            Mail::raw("Your OTP Code: {$otp}", function ($message) use ($email) {
-                $message->to($email)->subject('OTP Verification');
+
+            Mail::html(otpMailTemplate($otp), static function ($message) use ($email) {
+                $message->to($email)
+                    ->subject('OTP Verification');
             });
 
             RateLimiter::hit('send-otp:' . $email);

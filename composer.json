@@ -34,7 +34,8 @@
         },
         "files": [
             "app/Helpers/QueryHeplers.php",
-            "app/Helpers/TransactionHepler.php"
+            "app/Helpers/TransactionHepler.php",
+            "app/Helpers/MailHepler.php"
         ]
     },
     "autoload-dev": {
