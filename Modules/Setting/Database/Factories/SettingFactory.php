@@ -13,10 +13,6 @@ class SettingFactory extends Factory
     public function definition()
     {
         return [
-            'instagram_url'   => $this->faker->optional()->url(),
-            'facebook_url'    => $this->faker->optional()->url(),
-            'linkedin_url'    => $this->faker->optional()->url(),
-            'twitter_url'     => $this->faker->optional()->url(),
             'whatsapp_number' => $this->faker->optional()->phoneNumber(),
             'phone_number_1'  => $this->faker->optional()->phoneNumber(),
             'phone_number_2'  => $this->faker->optional()->phoneNumber(),
