@@ -66,4 +66,5 @@ class UserService
             'user' => UserResource::make($user),
         ]);
     }
+
 }

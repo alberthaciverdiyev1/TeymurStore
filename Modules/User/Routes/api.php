@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 require 'authRoute.php';
 require 'userRoute.php';
 require 'favoriteRoute.php';
+require 'addressRoute.php';
 
 
 
