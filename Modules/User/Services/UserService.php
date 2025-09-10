@@ -2,9 +2,12 @@
 
 namespace Modules\User\Services;
 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Modules\User\Http\Entities\OtpEmail;
 use Modules\User\Http\Entities\User;
+use Modules\User\Http\UserResource;
 use Symfony\Component\HttpFoundation\Response as StatusCode;
 
 class UserService
@@ -45,5 +48,22 @@ class UserService
 
             return $user;
         }, 'Email changed successfully');
+    }
+
+    public function details(int $id = null): JsonResponse
+    {
+        $user = $id ? User::find($id) : Auth::user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'user' => UserResource::make($user),
+        ]);
     }
 }

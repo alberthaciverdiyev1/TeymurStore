@@ -21,4 +21,9 @@ class UserController extends Controller
     {
         return $this->service->changeEmail($request);
     }
+
+    public function details(int $id = null): JsonResponse
+    {
+        return $this->service->details($id);
+    }
 }
