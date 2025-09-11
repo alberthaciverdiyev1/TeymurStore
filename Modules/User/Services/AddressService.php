@@ -3,19 +3,16 @@
 namespace Modules\User\Services;
 
 use App\Interfaces\ICrudInterface;
-use Illuminate\Http\Client\Request;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Storage;
 use Modules\User\Http\Entities\Address;
 use Modules\User\Http\Resources\AddressResource;
 
 class AddressService implements ICrudInterface
 {
-
     private Address $model;
 
-    function __construct(Address $model)
+    public function __construct(Address $model)
     {
         $this->model = $model;
     }
@@ -27,14 +24,29 @@ class AddressService implements ICrudInterface
 
         return response()->json([
             'success' => 200,
-            'message' => __('Brands retrieved successfully.'),
+            'message' => __('Addresses retrieved successfully.'),
             'data' => AddressResource::collection($data),
         ]);
     }
 
     public function details(int $id): JsonResponse
     {
-        // TODO: Implement details() method.
+        try {
+            $address = $this->model
+                ->where('user_id', auth()->id())
+                ->findOrFail($id);
+
+            return response()->json([
+                'success' => 200,
+                'message' => __('Address retrieved successfully.'),
+                'data' => new AddressResource($address),
+            ]);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'success' => 404,
+                'message' => __('Address not found.'),
+            ], 404);
+        }
     }
 
     /**
@@ -43,22 +55,53 @@ class AddressService implements ICrudInterface
     public function add($request): JsonResponse
     {
         $validated = $request->validated();
+        $validated['user_id'] = auth()->id();
 
         return handleTransaction(
-            fn() => $this->model->create($validated)->refresh(),
+            static fn() => $this->model->create($validated)->refresh(),
             'Address added successfully.',
             AddressResource::class
         );
     }
 
-
-    public function update(int $id, array $data): JsonResponse
+    public function update(int $id, $request): JsonResponse
     {
-        // TODO: Implement update() method.
+        try {
+            $data = $request->validated();
+
+            $address = $this->model
+                ->where('user_id', auth()->id())
+                ->findOrFail($id);
+
+            return handleTransaction(
+                static fn() => tap($address)->update($data)->refresh(),
+                'Address updated successfully.',
+                AddressResource::class
+            );
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'success' => 404,
+                'message' => __('Address not found.'),
+            ], 404);
+        }
     }
 
     public function delete(int $id): JsonResponse
     {
-        // TODO: Implement delete() method.
+        try {
+            $address = $this->model
+                ->where('user_id', auth()->id())
+                ->findOrFail($id);
+
+            return handleTransaction(
+                static fn() => tap($address)->delete(),
+                'Address deleted successfully.'
+            );
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'success' => 404,
+                'message' => __('Address not found.'),
+            ], 404);
+        }
     }
 }
