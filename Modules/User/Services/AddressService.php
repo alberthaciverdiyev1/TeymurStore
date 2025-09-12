@@ -57,12 +57,17 @@ class AddressService implements ICrudInterface
         $validated = $request->validated();
         $validated['user_id'] = auth()->id();
 
+        $hasAddress = $this->model->where('user_id', $validated['user_id'])->exists();
+
+        $validated['is_default'] = !$hasAddress;
+
         return handleTransaction(
-            static fn() => $this->model->create($validated)->refresh(),
+            fn() => $this->model->create($validated)->refresh(),
             'Address added successfully.',
             AddressResource::class
         );
     }
+
 
     public function update(int $id, $request): JsonResponse
     {
@@ -73,14 +78,21 @@ class AddressService implements ICrudInterface
                 ->where('user_id', auth()->id())
                 ->findOrFail($id);
 
-            return handleTransaction(
-                static fn() => tap($address)->update($data)->refresh(),
-                'Address updated successfully.',
-                AddressResource::class
-            );
+            return handleTransaction(function () use ($address, $data) {
+                if (!empty($data['is_default']) && $data['is_default']) {
+                    $this->model
+                        ->where('user_id', auth()->id())
+                        ->where('id', '<>', $address->id)
+                        ->where('is_default', true)
+                        ->update(['is_default' => false]);
+                }
+
+                return tap($address)->update($data)->refresh();
+            }, 'Address updated successfully.', AddressResource::class);
+
         } catch (ModelNotFoundException $e) {
             return response()->json([
-                'success' => 404,
+                'success' => false,
                 'message' => __('Address not found.'),
             ], 404);
         }
@@ -94,7 +106,7 @@ class AddressService implements ICrudInterface
                 ->findOrFail($id);
 
             return handleTransaction(
-                static fn() => tap($address)->delete(),
+                fn() => tap($address)->delete(),
                 'Address deleted successfully.'
             );
         } catch (ModelNotFoundException $e) {

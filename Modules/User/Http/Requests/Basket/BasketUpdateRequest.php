@@ -21,11 +21,12 @@ class BasketUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'quantity'   => ['sometimes','required', 'integer', 'min:1'],
-            'gender' => ['sometimes','nullable'],
-            'size_id' => ['sometimes','nullable'],
-            'color_id' => ['sometimes','nullable'],
-            'user_id' => ['required', 'integer']
+            'quantity' => ['sometimes', 'required', 'integer', 'min:1'],
+            'gender' => ['sometimes', 'nullable'],
+            'size_id' => ['sometimes', 'nullable'],
+            'color_id' => ['sometimes', 'nullable'],
+            'user_id' => ['required', 'integer'],
+            'selected' => ['sometimes', 'nullable'],
         ];
     }
 }

@@ -7,6 +7,7 @@ enum Gender: int
     case MALE = 0;
     case FEMALE = 1;
     case KIDS = 2;
+    case UNISEX = 3;
 
     public function label(): string
     {
@@ -14,6 +15,7 @@ enum Gender: int
             self::MALE => __('Male'),
             self::FEMALE => __('Female'),
             self::KIDS => __('Kids'),
+            self::UNISEX => __('Unisex'),
         };
     }
 
@@ -23,6 +25,7 @@ enum Gender: int
             0 => self::MALE,
             1 => self::FEMALE,
             2 => self::KIDS,
+            3 => self::UNISEX,
             default => throw new \InvalidArgumentException("Invalid Gender value: {$value}"),
         };
     }
