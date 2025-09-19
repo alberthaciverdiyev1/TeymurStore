@@ -11,6 +11,7 @@ use Modules\Order\Http\Entities\OrderItem;
 use Modules\Order\Http\Entities\OrderStatus;
 use Modules\Order\Http\Resources\OrderDetailResource;
 use Modules\Order\Http\Resources\OrderResource;
+use Modules\Product\Http\Entities\Product;
 use Modules\User\Http\Entities\Address;
 use Modules\User\Http\Entities\Basket;
 use App\Enums\OrderStatus as OrderStatusEnum;
@@ -123,7 +124,12 @@ class OrderService implements ICrudInterface
                         'total_price' => ($item->product->discount ?? $item->product->price) * $item->quantity,
                     ])
                 );
+                Product::where('id', $item->product->id)->decrement('stock_count', $item->quantity);
+                Product::where('id', $item->product->id)->increment('sales_count', $item->quantity);
+                //    $item->product->increment('sales_count', $item->quantity);
+                //o    $item->product->decrement('stock_count', $item->quantity);
             }
+
             Basket::destroy($basket->pluck('id')->toArray());
         }
 

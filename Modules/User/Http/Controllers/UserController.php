@@ -21,6 +21,10 @@ class UserController extends Controller
     {
         return $this->service->changeEmail($request);
     }
+    public function getAll(): JsonResponse
+    {
+        return $this->service->getAll();
+    }
 
     public function details(int $id = null): JsonResponse
     {

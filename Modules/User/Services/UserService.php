@@ -50,6 +50,15 @@ class UserService
         }, 'Email changed successfully');
     }
 
+    public function getAll(): JsonResponse
+    {
+        $users = User::all();
+
+        return response()->json([
+            'success' => 200,
+            'user' => UserResource::make($users),
+        ]);
+    }
     public function details(int $id = null): JsonResponse
     {
         $user = $id ? User::find($id) : Auth::user();

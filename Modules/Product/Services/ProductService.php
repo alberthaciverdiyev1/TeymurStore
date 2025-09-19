@@ -107,10 +107,13 @@ class ProductService
                 'colors', 'sizes', 'images', 'category', 'brand', 'reviews.user'
             ])->findOrFail($id);
 
+            $product?->increment('views');
+
             $averageRate = $product->reviews()->avg('rate') ?? 5;
 
             $data = ProductResource::make($product);
             $data->rate = round($averageRate, 2);
+
 
             return response()->json([
                 'success' => 200,

@@ -17,18 +17,20 @@ class ProductResource extends JsonResource
         $locale = app()->getLocale();
 
         return [
+            'id' => $this->id,
             'title'=>$this->title,
             'description'=>$this->description,
-            'id' => $this->id,
             'sku' => $this->sku,
             'rate'=>$this->rate,
             'rate_count'=>$this->rate_count,
             'brand' => new BrandResource($this->whenLoaded('brand')),
             'gender' => $this->gender !== null ? Gender::fromInt($this->gender)->label() : null,
             'price' => $this->price,
-            'discount' => $this->discount,
-            'stock_count' => $this->stock_count,
+            'views' => $this->views,
+            'discount' => $this->discount ?? 0,
+            'stock_count' => $this->stock_count ?? 0,
             'is_active' => $this->is_active,
+            'sale_count' => $this->sale_count ?? 0,
            // 'title' => $this->getTranslation('title', $locale, false) ?? $this->getTranslation('title', 'az'),
             //'description' => $this->getTranslation('description', $locale, false) ?? $this->getTranslation('description', 'az'),
             'colors' => ColorResource::collection($this->whenLoaded('colors')),
