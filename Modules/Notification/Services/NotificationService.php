@@ -2,50 +2,77 @@
 
 namespace Modules\Notification\Services;
 
-use Illuminate\Support\Facades\Http;
+use Modules\Notification\Http\Entities\Notification;
+use Modules\Notification\Http\Resources\NotificationResource;
 
 class NotificationService
 {
-    private string $serverKey;
+    private Notification $model;
 
-    public function __construct()
+    public function __construct(Notification $model)
     {
-        $this->serverKey = config('services.fcm.server_key');
+        $this->model = $model;
     }
 
-
-    public function sendToDevice(string $deviceToken, string $title, string $body, array $data = []): array
+    public function add(array $data): Notification
     {
-        return $this->sendRequest([
-            'to' => $deviceToken,
-            'notification' => [
-                'title' => $title,
-                'body' => $body,
-            ],
-            'data' => $data
+        return $this->model->create([
+            'title' => $data['title'] ?? '',
+            'description' => $data['body'] ?? '',
+            'user_id' => $data['user_id'] ?? null,
         ]);
     }
 
 
-    public function sendToMultiple(array $deviceTokens, string $title, string $body, array $data = []): array
+    public function addMultiple(array $notifications): bool
     {
-        return $this->sendRequest([
-            'registration_ids' => $deviceTokens,
-            'notification' => [
-                'title' => $title,
-                'body' => $body,
-            ],
-            'data' => $data
-        ]);
+        $dataToInsert = array_map(function ($data) {
+            return [
+                'title' => $data['title'] ?? '',
+                'description' => $data['body'] ?? '',
+                'user_id' => $data['user_id'] ?? null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        }, $notifications);
+
+        return $this->model->insert($dataToInsert);
     }
 
-    private function sendRequest(array $payload): array
+    public function list($request)
     {
-        $response = Http::withHeaders([
-            'Authorization' => 'key=' . $this->serverKey,
-            'Content-Type' => 'application/json',
-        ])->post('https://fcm.googleapis.com/fcm/send', $payload);
+        $filters = $request->all();
 
-        return $response->json();
+        $query = $this->model->query();
+
+        if (!empty($filters['user_id'])) {
+            $query->where('user_id', $filters['user_id']);
+        }
+
+        if (!empty($filters['title'])) {
+            $query->where('title', 'like', '%' . $filters['title'] . '%');
+        }
+
+        if (!empty($filters['date_from'])) {
+            $query->where('created_at', '>=', $filters['date_from']);
+        }
+
+        if (!empty($filters['date_to'])) {
+            $query->where('created_at', '<=', $filters['date_to']);
+        }
+
+        $notifications = $query->orderBy('created_at', 'desc')->paginate(20);
+
+        return response()->json([
+            'success' => 200,
+            'message' => __('Notifications retrieved successfully.'),
+            'data' => NotificationResource::collection($notifications),
+            'meta' => [
+                'current_page' => $notifications->currentPage(),
+                'last_page' => $notifications->lastPage(),
+                'per_page' => $notifications->perPage(),
+                'total' => $notifications->total(),
+            ],
+        ]);
     }
 }

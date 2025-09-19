@@ -3,7 +3,7 @@
 namespace Modules\User\Services;
 
 use Modules\Notification\Http\Entities\NotificationToken;
-use Modules\Notification\Services\NotificationService;
+use Modules\Notification\Services\SendNotificationService;
 use Modules\Notification\Services\NotificationTokenService;
 use Modules\User\Http\Entities\OtpEmail;
 use Modules\User\Http\Entities\User;
