@@ -6,5 +6,6 @@
     "Size": true,
     "Product": true,
     "Setting": true,
-    "Order": true
+    "Order": true,
+    "Notification": true
 }
