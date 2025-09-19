@@ -34,5 +34,10 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+    'fcm' => [
+        'server_key' => env('FIREBASE_SERVER_KEY'),
+        'sender_id'  => env('FIREBASE_SENDER_ID'),
+    ],
+
 
 ];

@@ -2,6 +2,9 @@
 
 namespace Modules\User\Services;
 
+use Modules\Notification\Http\Entities\NotificationToken;
+use Modules\Notification\Services\NotificationService;
+use Modules\Notification\Services\NotificationTokenService;
 use Modules\User\Http\Entities\OtpEmail;
 use Modules\User\Http\Entities\User;
 use Illuminate\Http\Request;
@@ -15,10 +18,12 @@ use Symfony\Component\HttpFoundation\Response as StatusCode;
 class AuthService
 {
     private User $model;
+    private NotificationTokenService $notificationTokenService;
 
-    function __construct(User $model)
+    function __construct(User $model, NotificationTokenService $notificationTokenService)
     {
         $this->model = $model;
+        $this->notificationTokenService = $notificationTokenService;
     }
 
     /**
@@ -85,7 +90,9 @@ class AuthService
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6',
-            'otpCode' => 'required|digits:4'
+            'otpCode' => 'required|digits:4',
+            'device_token' => 'required|string',
+            'device_type' => 'nullable|string'
         ]);
 
         $email = $validated['email'];
@@ -116,12 +123,15 @@ class AuthService
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
+        $notificationTokenResponse = $this->notificationTokenService->updateOrCreate($validated, $user);
+
         return response()->json([
             'status' => StatusCode::HTTP_CREATED,
             'message' => StatusCode::$statusTexts[StatusCode::HTTP_CREATED],
             'data' => [
                 'token' => $token,
-                'user' => $user->only(['id','name','email'])
+                'user' => $user->only(['id', 'name', 'email']),
+                'notification_data' => $notificationTokenResponse,
             ]
         ], StatusCode::HTTP_CREATED);
     }
@@ -133,7 +143,9 @@ class AuthService
     {
         $validated = $request->validate([
             'email' => 'required|email',
-            'password' => 'required|string|min:6'
+            'password' => 'required|string|min:6',
+            'device_token' => 'required|string',
+            'device_type' => 'nullable|string'
         ]);
 
         $user = $this->model->where('email', $validated['email'])->first();
@@ -156,12 +168,15 @@ class AuthService
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
+        $notificationTokenResponse = $this->notificationTokenService->updateOrCreate($validated, $user);
+
         return response()->json([
             'status' => StatusCode::HTTP_OK,
             'message' => StatusCode::$statusTexts[StatusCode::HTTP_OK],
             'data' => [
                 'token' => $token,
-                'user' => $user->only(['id','name','email'])
+                'user' => $user->only(['id', 'name', 'email']),
+                'notification_data' => $notificationTokenResponse,
             ]
         ], StatusCode::HTTP_OK);
     }
@@ -172,6 +187,10 @@ class AuthService
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
+
+        if ($request->device_token) {
+            $this->notificationTokenService->deleteToken($request);
+        }
 
         return response()->json([
             'status' => StatusCode::HTTP_OK,

@@ -9,6 +9,7 @@ use Illuminate\Database\Seeder;
 use Modules\Brand\Database\Seeders\BrandDatabaseSeeder;
 use Modules\Category\Database\Seeders\CategoryDatabaseSeeder;
 use Modules\Color\Database\Seeders\ColorDatabaseSeeder;
+use Modules\Notification\Database\Seeders\NotificationDatabaseSeeder;
 use Modules\Product\Database\Seeders\ProductDatabaseSeeder;
 use Modules\Setting\Database\Seeders\SettingDatabaseSeeder;
 use Modules\Size\Database\Seeders\SizeDatabaseSeeder;
@@ -30,6 +31,7 @@ class DatabaseSeeder extends Seeder
             SizeDatabaseSeeder::class,
             UserDatabaseSeeder::class,
             ProductDatabaseSeeder::class,
+            NotificationDatabaseSeeder::class,
         ]);
     }
 }
