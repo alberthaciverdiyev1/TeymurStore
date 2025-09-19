@@ -29,7 +29,7 @@ class NotificationService
         $dataToInsert = array_map(function ($data) {
             return [
                 'title' => $data['title'] ?? '',
-                'description' => $data['body'] ?? '',
+                'body' => $data['body'] ?? '',
                 'user_id' => $data['user_id'] ?? null,
                 'created_at' => now(),
                 'updated_at' => now(),
