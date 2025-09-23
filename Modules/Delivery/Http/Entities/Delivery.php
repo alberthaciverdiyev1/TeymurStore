@@ -1,10 +1,10 @@
 <?php
 
-namespace Modules\$STUDLY_NAME$\Entities;
+namespace Modules\Delivery\Http\Entities;
 
 use Illuminate\Database\Eloquent\Model;
 
-class $CLASS$ extends Model
+class Delivery extends Model
 {
     /**
      * The table associated with the model.
@@ -18,7 +18,7 @@ class $CLASS$ extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [
+    protected $guarded = [
 
     ];
 

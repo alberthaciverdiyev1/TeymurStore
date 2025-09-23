@@ -14,7 +14,16 @@ use Illuminate\Http\Request;
 */
 
 
-Route::middleware('auth:api')->group(function () {
-    Route::resource('/{delivery}', \Modules\{Delivery}\Http\Controllers\{Delivery}Controller::class);
+Route::prefix('delivery')->controller(\Modules\Delivery\Http\Controllers\DeliveryController::class)->group(function () {
+    Route::get('/', 'list')->name('delivery.list');
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/', 'add')->name('delivery.add');
+        Route::get('/{id}', 'details')->name('delivery.details');
+        Route::put('/{id}', 'update')->name('delivery.update');
+        Route::delete('/{id}', 'delete')->name('delivery.delete');
+    });
 });
+
+
 
