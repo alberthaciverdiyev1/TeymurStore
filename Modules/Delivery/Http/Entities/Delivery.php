@@ -2,32 +2,41 @@
 
 namespace Modules\Delivery\Http\Entities;
 
+use App\Enums\City;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Modules\Delivery\Database\Factories\DeliveryFactory;
 
 class Delivery extends Model
 {
+    use HasFactory,SoftDeletes;
     /**
      * The table associated with the model.
      *
      * @var string
      */
-    protected $table = '';
+    protected $table = 'delivery_prices';
 
     /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
      */
-    protected $guarded = [
-
+    protected $fillable = [
+        'city_name',
+        'price',
+        'free_from',
+        'delivery_time',
+        'is_active'
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
-
+        'city_name' => City::class,
     ];
+
+    protected static function newFactory():DeliveryFactory
+    {
+        return DeliveryFactory::new();
+    }
 }

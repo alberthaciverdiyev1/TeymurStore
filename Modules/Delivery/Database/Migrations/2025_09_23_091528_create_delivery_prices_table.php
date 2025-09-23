@@ -11,13 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('$TABLE_NAME$', function (Blueprint $table) {
+        Schema::create('delivery_prices', function (Blueprint $table) {
             $table->id();
-            $table->string('slug');
-            $table->string('name');
-
-
-
+            $table->string('city_name');
+            $table->decimal('price', 8, 2);
+            $table->decimal('free_from', 8, 2)->default(0);
+            $table->string('delivery_time')->nullable();
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
             $table->softDeletes();
         });
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('$TABLE_NAME$');
+        Schema::dropIfExists('delivery_prices');
     }
 };

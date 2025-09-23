@@ -5,98 +5,69 @@ namespace Modules\Delivery\Http\Controllers;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Modules\Delivery\Http\DeliveryAddRequest;
+use Modules\Delivery\Http\DeliveryUpdateRequest;
+use Modules\Delivery\Services\DeliveryService;
 use Nwidart\Modules\Facades\Module;
 
 class DeliveryController extends Controller
 {
 
-    public function __construct()
+    private DeliveryService $service;
+
+    public function __construct(DeliveryService $service)
     {
-        if (Module::find('Roles')->isEnabled()) {
-            $this->middleware('permission:view deliverys')->only('index');
-            $this->middleware('permission:create delivery')->only('create');
-            $this->middleware('permission:store delivery')->only('store');
-            $this->middleware('permission:edit delivery')->only('edit');
-            $this->middleware('permission:update delivery')->only('update');
-            $this->middleware('permission:destroy delivery')->only('destroy');
-        }
+//        if (Module::find('Roles')->isEnabled()) {
+//            $this->middleware('permission:view deliveries')->only('index');
+//            $this->middleware('permission:create delivery')->only('create');
+//            $this->middleware('permission:store delivery')->only('store');
+//            $this->middleware('permission:edit delivery')->only('edit');
+//            $this->middleware('permission:update delivery')->only('update');
+//            $this->middleware('permission:destroy delivery')->only('destroy');
+//        }
+
+        $this->service = $service;
     }
 
 
     /**
-    * Display a listing of the resource.
-    */
-    public function index()
-    {
-        return view('delivery::index');
-    }
-
-    /**
-     * Show the form for creating a new resource.
+     * Display a listing of the resource.
      */
-    public function create()
+    public function list(Request $request)
     {
-        return view('delivery::create');
+        return $this->service->list($request);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function add(DeliveryAddRequest $request)
     {
-        try {
-
-            //TODO:STORE FUNCTIONS
-
-            return response()->json(__('Data successfully created!'));
-        } catch (Exception $e) {
-            return response()->json($e->getMessage());
-        }
+        return $this->service->add($request);
     }
 
     /**
      * Show the specified resource.
      */
-    public function show()
+    public function details(int $id)
     {
-        return view('delivery::show');
+        return $this->service->details($id);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit()
+    public function update(DeliveryUpdateRequest $request, int $id)
     {
-        return view('delivery::edit');
+        return $this->service->update($request, $id);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request)
-    {
-        try {
-
-            //TODO:UPDATE FUNCTIONS
-
-            return response()->json(__('Data successfully updated!'));
-        } catch (Exception $e) {
-            return response()->json($e->getMessage());
-        }
-    }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy()
+    public function delete(int $id)
     {
-        try {
-
-            //TODO:DESTROY FUNCTIONS
-
-            return response()->json(__('Data successfully deleted!'));
-        } catch (Exception $e) {
-            return response()->json($e->getMessage());
-        }
+        return $this->service->delete($id);
     }
 }
