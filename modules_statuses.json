@@ -7,5 +7,6 @@
     "Product": true,
     "Setting": true,
     "Order": true,
-    "Notification": true
+    "Notification": true,
+    "Delivery": true
 }
