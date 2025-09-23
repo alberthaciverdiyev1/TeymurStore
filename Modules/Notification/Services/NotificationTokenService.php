@@ -15,10 +15,12 @@ class NotificationTokenService
     }
 
 
-    public function updateOrCreate($validated, $user): JsonResponse
+    public function updateOrCreate($validated, $user = null): JsonResponse
     {
-       return handleTransaction(
-           fn() => $this->model->updateOrCreate(
+        $user = $user ?? auth()->user();
+
+        return handleTransaction(
+            fn() => $this->model->updateOrCreate(
                 [
                     'token' => $validated['device_token']
                 ],

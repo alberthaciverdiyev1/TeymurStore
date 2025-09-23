@@ -16,9 +16,12 @@ class NotificationAddRequest extends FormRequest
         return [
             'title' => 'required|string|max:255',
             'body' => 'required|string',
+            'icon' => 'nullable|url|max:2048',
+            'data' => 'nullable|array',
             'users' => ['nullable', 'array'],
             'users.*' => ['nullable', 'integer', 'exists:users,id'],
         ];
     }
+
 
 }

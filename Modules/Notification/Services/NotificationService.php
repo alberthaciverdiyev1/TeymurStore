@@ -2,6 +2,7 @@
 
 namespace Modules\Notification\Services;
 
+use Illuminate\Support\Facades\DB;
 use Modules\Notification\Http\Entities\Notification;
 use Modules\Notification\Http\Resources\NotificationResource;
 
@@ -18,31 +19,57 @@ class NotificationService
     {
         return $this->model->create([
             'title' => $data['title'] ?? '',
-            'description' => $data['body'] ?? '',
+            'body' => $data['body'] ?? '',
             'user_id' => $data['user_id'] ?? null,
+            'all' => $data['all'] ?? false,
+            'data' => $data['data'] ?? null,
         ]);
     }
 
-
-    public function addMultiple(array $notifications): bool
+    public function addMultiple(array $notificationData, array $userIds, bool $all = false): bool
     {
-        $dataToInsert = array_map(function ($data) {
-            return [
-                'title' => $data['title'] ?? '',
-                'body' => $data['body'] ?? '',
-                'user_id' => $data['user_id'] ?? null,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
-        }, $notifications);
+        try {
+            DB::beginTransaction();
 
-        return $this->model->insert($dataToInsert);
+            if ($all) {
+                $this->model->create([
+                    'title' => $notificationData['title'] ?? '',
+                    'body' => $notificationData['body'] ?? '',
+                    'user_id' => null,
+                    'all' => true,
+                    'data' => $notificationData['data'] ?? null,
+                ]);
+            } else {
+                $dataToInsert = array_map(function ($userId) use ($notificationData) {
+                    return [
+                        'title' => $notificationData['title'] ?? '',
+                        'body' => $notificationData['body'] ?? '',
+                        'user_id' => $userId,
+                        'all' => false,
+                        'data' => $notificationData['data'] ?? null,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }, $userIds);
+
+                $this->model->insert($dataToInsert);
+            }
+
+            DB::commit();
+            return true;
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return false;
+        }
     }
 
+    /**
+     * Notification list
+     */
     public function list($request)
     {
         $filters = $request->all();
-
         $query = $this->model->query();
 
         if (!empty($filters['user_id'])) {
