@@ -12,7 +12,7 @@ protected $model = Brand::class;
     {
       return [
           'name' => $this->faker->name(),
-          'image' => $this->faker->imageUrl(),
+          'image' => 'https://i.ibb.co/CK4B2Twd/usta.png',
       ];
     }
 }
