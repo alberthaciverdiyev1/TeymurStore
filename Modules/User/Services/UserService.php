@@ -50,6 +50,38 @@ class UserService
         }, 'Email changed successfully');
     }
 
+    public function changeName(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+
+        $user = $request->user();
+
+
+        return handleTransaction(function () use ($user, $validated) {
+            $user->name = $validated['name'];
+            $user->save();
+            return $user;
+        }, 'Name changed successfully');
+    }
+
+    public function changeSurname(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'surname' => 'required|string|max:255',
+        ]);
+
+        $user = $request->user();
+
+
+        return handleTransaction(function () use ($user, $validated) {
+            $user->surname = $validated['surname'];
+            $user->save();
+            return $user;
+        }, 'Surname changed successfully');
+    }
+
     public function getAll(): JsonResponse
     {
         $users = User::all();
@@ -59,6 +91,7 @@ class UserService
             'user' => UserResource::make($users),
         ]);
     }
+
     public function details(int $id = null): JsonResponse
     {
         $user = $id ? User::find($id) : Auth::user();
