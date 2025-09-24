@@ -21,6 +21,22 @@ class UserController extends Controller
     {
         return $this->service->changeEmail($request);
     }
+
+    public function changeName(Request $request): JsonResponse
+    {
+        return $this->service->changeName($request);
+    }
+
+    public function changeSurname(Request $request): JsonResponse
+    {
+        return $this->service->changeSurname($request);
+    }
+
+    public function changePhone(Request $request): JsonResponse
+    {
+        return $this->service->changePhone($request);
+    }
+
     public function getAll(): JsonResponse
     {
         return $this->service->getAll();

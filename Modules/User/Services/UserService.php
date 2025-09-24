@@ -66,6 +66,22 @@ class UserService
         }, 'Name changed successfully');
     }
 
+    public function changePhone(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'phone' => 'required|string|max:255',
+        ]);
+
+        $user = $request->user();
+
+
+        return handleTransaction(function () use ($user, $validated) {
+            $user->phone = $validated['phone'];
+            $user->save();
+            return $user;
+        }, 'Phone changed successfully');
+    }
+
     public function changeSurname(Request $request): JsonResponse
     {
         $validated = $request->validate([
