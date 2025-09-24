@@ -2,13 +2,11 @@
 
 namespace Modules\Delivery\Http\Controllers;
 
-use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Modules\Delivery\Http\DeliveryAddRequest;
-use Modules\Delivery\Http\DeliveryUpdateRequest;
+use Modules\Delivery\Http\Requests\DeliveryAddRequest;
+use Modules\Delivery\Http\Requests\DeliveryUpdateRequest;
 use Modules\Delivery\Services\DeliveryService;
-use Nwidart\Modules\Facades\Module;
 
 class DeliveryController extends Controller
 {

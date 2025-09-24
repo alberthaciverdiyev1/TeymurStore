@@ -1,10 +1,10 @@
 <?php
 
-namespace Modules\Delivery\Http;
+namespace Modules\Delivery\Http\Requests;
 
+use App\Enums\City;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Enum;
-use App\Enums\City;
 
 class DeliveryUpdateRequest extends FormRequest
 {

@@ -53,26 +53,37 @@ class DeliveryService
 
     /**
      * Delivery details
+     * @param int|null $id
+     * @param string $name
+     * @return JsonResponse
      */
-    public function details(int $id): JsonResponse
-    {
-        try {
-            $delivery = $this->model->findOrFail($id);
+        public function details(int $id = null, string $name): JsonResponse
+        {
+            try {
+                if (!$id && !$name) {
+                    return response()->json([
+                        'success' => 400,
+                        'message' => __('Either ID or city name must be provided.'),
+                        'data' => [],
+                    ]);
+                }
 
-            return response()->json([
-                'success' => 200,
-                'message' => __('Delivery details retrieved successfully.'),
-                'data' => DeliveryResource::make($delivery),
-            ]);
+                $delivery = $id ? $this->model->findOrFail($id) : $this->model->where('city_name', $name)->firstOrFail();
 
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json([
-                'success' => 404,
-                'message' => __('Delivery not found.'),
-                'data' => [],
-            ]);
+                return response()->json([
+                    'success' => 200,
+                    'message' => __('Delivery details retrieved successfully.'),
+                    'data' => DeliveryResource::make($delivery),
+                ]);
+
+            } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+                return response()->json([
+                    'success' => 404,
+                    'message' => __('Delivery not found.'),
+                    'data' => [],
+                ]);
+            }
         }
-    }
 
     /**
      * Add color

@@ -2,7 +2,9 @@
 
 namespace Modules\User\Http\Requests\Address;
 
+use App\Enums\City;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rules\Enum;
 
 class AddressUpdateRequest extends FormRequest
 {
@@ -14,7 +16,7 @@ class AddressUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'city' => ['sometimes', 'required', 'string', 'max:255'],
+            'city' => ['sometimes', 'required', new Enum(City::class)],
             'town_village_district' => ['sometimes', 'required', 'string', 'max:255'],
             'street_building_number' => ['sometimes', 'required', 'string', 'max:255'],
             'unit_floor_apartment' => ['sometimes', 'required', 'string', 'max:255'],

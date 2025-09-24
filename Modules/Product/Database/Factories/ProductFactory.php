@@ -57,6 +57,12 @@ class ProductFactory extends Factory
 
             $sizes = Size::inRandomOrder()->take(rand(1, 3))->pluck('id');
             $product->sizes()->attach($sizes);
+
+            $images = [
+                ['image_path' => 'https://i.ibb.co/TBtqFwVM/meherrem.jpg']
+            ];
+
+            $product->images()->createMany($images);
         });
     }
 }
