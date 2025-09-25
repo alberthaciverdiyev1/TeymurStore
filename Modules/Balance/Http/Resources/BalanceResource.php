@@ -9,7 +9,14 @@ class BalanceResource extends JsonResource
 {
     public function toArray(Request $request)
     {
-        return parent::toArray($request);
+        return [
+            "id"=> $this->id,
+            "amount"=>$this->amount,
+            "type"=>$this->type,
+            "note"=>$this->note,
+            "created_at"=>$this->created_at->format('Y-m-d H:i:s'),
+
+        ];
     }
 
 }

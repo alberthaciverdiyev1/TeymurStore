@@ -215,7 +215,6 @@ class AuthService
             'otp_code' => $validated['otpCode']
         ])->where('deactive_date', '>', now())->first();
 
-
         if (!$otpCheck) {
             return response()->json([
                 'status' => StatusCode::HTTP_FORBIDDEN,

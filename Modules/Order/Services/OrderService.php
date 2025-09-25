@@ -2,10 +2,13 @@
 
 namespace Modules\Order\Services;
 
+use App\Enums\BalanceType;
 use App\Interfaces\ICrudInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Modules\Balance\Services\BalanceService;
 use Modules\Delivery\Services\DeliveryService;
 use Modules\Order\Http\Entities\Order;
 use Modules\Order\Http\Entities\OrderItem;
@@ -21,11 +24,13 @@ class OrderService implements ICrudInterface
 {
     private Order $model;
     private DeliveryService $deliveryService;
+    private BalanceService $balanceService;
 
-    public function __construct(Order $model, DeliveryService $deliveryService)
+    public function __construct(Order $model, DeliveryService $deliveryService, BalanceService $balanceService)
     {
         $this->model = $model;
         $this->deliveryService = $deliveryService;
+        $this->balanceService = $balanceService;
     }
 
     public function getAll($request): JsonResponse
@@ -71,92 +76,6 @@ class OrderService implements ICrudInterface
             ], 404);
         }
     }
-
-    /**
-     * Add address
-     */
-//    public function add($request): JsonResponse
-//    {
-//        $validated = $request->validated();
-//        $address = Address::where('user_id', auth()->id())->where('is_default', true)->first();
-//
-//        $deliveryResponse    = $this->deliveryService->details(null, $address->city ?? null)->getData(true);
-//        $delivery = $deliveryResponse['data'] ?? null;
-//
-//        $basket = Basket::with(['product'])->where('user_id', auth()->id())->where('selected', true)->get();
-//
-//        $validated['address_id'] = $address ? $address->id : null;
-//
-//        if (!$validated['address_id']) {
-//            return response()->json([
-//                'success' => 400,
-//                'message' => __('Please set a default address before placing an order.'),
-//            ], 400);
-//        }
-//
-//        $validated['user_id'] = auth()->id();
-//        $validated['transaction_id'] = (string)strtoupper(Str::uuid());
-//        $validated['total_price'] = round($basket->sum(function ($item) {
-//            $price = $item->product->discount ?? null;
-//            if ($price && $price > 0) {
-//                return $item->quantity * $price;
-//            }
-//            return $item->quantity * $item->product->price;
-//        }), 2);
-//
-//
-//        $validated['discount_price'] = $validated['total_price'] - round($basket->sum(function ($item) {
-//                if (!empty($item->product->discount) && $item->product->discount > 0) {
-//                    return $item->quantity * $item->product->discount;
-//                }
-//                return 0;
-//            }), 2);
-//
-//        $validated['shipping_price'] = ($validated['total_price'] < $delivery['free_from']) ? $delivery['free_from'] : 0;
-//
-//        $validated['paid_at'] = now();
-//
-//        $data = handleTransaction(
-//            fn() => $this->model->create($validated)->refresh(),
-//            'Order added successfully.'
-//        );
-//        $content = $data->getData(true);
-////        return response()->json($content);
-//
-//        if ($content['success'] === 201) {
-//            (int)$orderId = $content['data']['id'];
-//            handleTransaction(
-//                fn() => OrderStatus::create([
-//                    'order_id' => $orderId,
-//                    'status' => OrderStatusEnum::PLACED,
-//                ])->refresh(),
-//            );
-//            foreach ($basket as $item) {
-//                handleTransaction(
-//                    fn() => OrderItem::create([
-//                        'order_id' => $orderId,
-//                        'product_id' => $item->product->id,
-//                        'color_id' => $item->color_id,
-//                        'size_id' => $item->size_id,
-//                        'quantity' => $item->quantity,
-//                        'unit_price' => $item->product->discount ?? $item->product->price,
-//                        'total_price' => ($item->product->discount ?? $item->product->price) * $item->quantity,
-//                    ])
-//                );
-//                Product::where('id', $item->product->id)->decrement('stock_count', $item->quantity);
-//                Product::where('id', $item->product->id)->increment('sales_count', $item->quantity);
-//                //    $item->product->increment('sales_count', $item->quantity);
-//                //o    $item->product->decrement('stock_count', $item->quantity);
-//            }
-//
-//            Basket::destroy($basket->pluck('id')->toArray());
-//        }
-//
-//        return response()->json([
-//            'success' => 201,
-//            'message' => __('Order added successfully.'),
-//        ], 201);
-//    }
 
     public function add($request): JsonResponse
     {
@@ -212,7 +131,7 @@ class OrderService implements ICrudInterface
 
             $validated['address_id'] = $address->id;
             $validated['user_id'] = auth()->id();
-            $validated['transaction_id'] = (string) strtoupper(Str::uuid());
+            $validated['transaction_id'] = (string)strtoupper(Str::uuid());
 
             $validated['total_price'] = round($basket->sum(function ($item) {
                 $price = $item->product->discount ?? null;
@@ -227,6 +146,28 @@ class OrderService implements ICrudInterface
             }), 2);
             $validated['shipping_price'] = $validated['total_price'] < $delivery['free_from'] ? ($delivery['price'] ?? 0) : 0;
 
+            if ($validated['pay_with_balance']) {
+                $userBalance = $this->balanceService->getBalance()->getData(true)['data']['balance'] ?? 0;
+
+                if ($userBalance < ($validated['total_price'] + $validated['shipping_price'])) {
+                    return response()->json([
+                        'success' => 400,
+                        'message' => __('Insufficient balance to complete the order.'),
+                    ], 400);
+                }
+
+                $balanceResponse = $this->balanceService->withdraw($validated['user_id'],($validated['total_price'] + $validated['shipping_price']),'Payment for order with transaction ID: ' . $validated['transaction_id']);
+                $balanceContent = $balanceResponse->getData(true);
+
+                if ($balanceContent['success'] !== 201) {
+                    return response()->json([
+                        'success' => 500,
+                        'message' => __('Failed to process payment from balance. Please try again.'),
+                    ], 500);
+                }
+            }
+
+            unset($validated['pay_with_balance']);
             $validated['paid_at'] = now();
 
             $data = handleTransaction(
@@ -237,25 +178,25 @@ class OrderService implements ICrudInterface
             $content = $data->getData(true);
 
             if ($content['success'] === 201) {
-                $orderId = (int) $content['data']['id'];
+                $orderId = (int)$content['data']['id'];
 
                 handleTransaction(
                     fn() => OrderStatus::create([
                         'order_id' => $orderId,
-                        'status'   => OrderStatusEnum::PLACED,
+                        'status' => OrderStatusEnum::PLACED,
                     ])->refresh(),
                 );
 
                 foreach ($basket as $item) {
                     handleTransaction(
                         fn() => OrderItem::create([
-                            'order_id'   => $orderId,
+                            'order_id' => $orderId,
                             'product_id' => $item->product->id,
-                            'color_id'   => $item->color_id,
-                            'size_id'    => $item->size_id,
-                            'quantity'   => $item->quantity,
+                            'color_id' => $item->color_id,
+                            'size_id' => $item->size_id,
+                            'quantity' => $item->quantity,
                             'unit_price' => $item->product->discount ?? $item->product->price,
-                            'total_price'=> ($item->product->discount ?? $item->product->price) * $item->quantity,
+                            'total_price' => ($item->product->discount ?? $item->product->price) * $item->quantity,
                         ])
                     );
 
@@ -277,7 +218,7 @@ class OrderService implements ICrudInterface
         } catch (\Throwable $e) {
             \Log::error('Order creation failed', [
                 'user_id' => auth()->id(),
-                'error'   => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([

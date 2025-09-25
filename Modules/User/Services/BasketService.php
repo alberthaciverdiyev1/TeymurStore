@@ -20,7 +20,7 @@ class BasketService implements ICrudInterface
     public function getAll($request): JsonResponse
     {
         $id = auth()->id();
-        $data = $this->model->where('user_id', $id)->get();
+        $data = $this->model->with('product')->where('user_id', $id)->get();
 
         return response()->json([
             'success' => 200,

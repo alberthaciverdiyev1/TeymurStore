@@ -2,6 +2,7 @@
 
 namespace Modules\Balance\Services;
 
+use Illuminate\Http\Request;
 use Modules\Balance\Http\Entities\Balance;
 use App\Enums\BalanceType;
 use Illuminate\Support\Facades\DB;
@@ -24,24 +25,38 @@ class BalanceService
         return handleTransaction(
             fn() => $this->model->create([
                 'user_id' => $validated['user_id'],
-                'type'    => BalanceType::DEPOSIT->value,
-                'amount'  => (float)$validated['amount'],
-                'note'    => $validated['note'] ?? null,
+                'type' => BalanceType::DEPOSIT->value,
+                'amount' => (float)$validated['amount'],
+                'note' => $validated['note'] ?? null,
             ])->refresh(),
             'Balance deposited successfully.',
             BalanceResource::class
         );
     }
 
-    public function withdraw($request): JsonResponse
+//    public function withdraw(Request $request): JsonResponse
+//    {
+//        $validated = $request->validated();
+//        return handleTransaction(
+//            fn() => $this->model->create([
+//                'user_id' => $validated['user_id'],
+//                'type' => BalanceType::WITHDRAWAL->value,
+//                'amount' => (float)$validated['amount'],
+//                'note' => $validated['note'] ?? null,
+//            ])->refresh(),
+//            'Balance withdrawn successfully.',
+//            BalanceResource::class
+//        );
+//    }
+
+    public function withdraw(int $user_id, float $amount, string $note = null): JsonResponse
     {
-        $validated = $request->validated();
         return handleTransaction(
             fn() => $this->model->create([
-                'user_id' => $validated['user_id'],
-                'type'    => BalanceType::WITHDRAWAL->value,
-                'amount'  => $validated['amount'],
-                'note'    => $validated['note'] ?? null,
+                'user_id' => $user_id,
+                'type' => BalanceType::WITHDRAWAL->value,
+                'amount' => $amount,
+                'note' => $note,
             ])->refresh(),
             'Balance withdrawn successfully.',
             BalanceResource::class

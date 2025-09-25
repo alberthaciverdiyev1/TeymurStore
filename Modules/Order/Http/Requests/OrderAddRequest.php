@@ -22,6 +22,7 @@ class OrderAddRequest extends FormRequest
     {
         return [
             'note' => ['nullable', 'string'],
+            'pay_with_balance' => ['nullable', 'boolean'],
         ];
     }
 }
