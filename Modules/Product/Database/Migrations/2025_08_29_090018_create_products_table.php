@@ -41,6 +41,7 @@ return new class extends Migration
             $table->integer('views')->default(0)->index();
             $table->integer('sales_count')->default(0)->index();
             $table->foreignId('user_id')->constrained()->nullOnDelete();
+            $table->boolean('is_suggest')->default(false);
             $table->timestamps();
             $table->softDeletes();
         });

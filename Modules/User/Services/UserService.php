@@ -100,7 +100,7 @@ class UserService
 
     public function getAll(): JsonResponse
     {
-        $users = User::all();
+        $users = User::with('balance')->get();
 
         return response()->json([
             'success' => 200,

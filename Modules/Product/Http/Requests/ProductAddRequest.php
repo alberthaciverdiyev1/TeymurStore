@@ -35,6 +35,7 @@ class ProductAddRequest extends FormRequest
             'discount' => ['nullable', 'numeric', 'min:0'],
             'stock_count' => ['required', 'integer', 'min:0'],
             'is_active' => ['boolean'],
+            'is_suggest' => ['boolean'],
             'views' => ['nullable', 'integer', 'min:0'],
             'sales_count' => ['nullable', 'integer', 'min:0'],
             'user_id' => ['required', 'exists:users,id'],

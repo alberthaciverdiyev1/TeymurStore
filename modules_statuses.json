@@ -8,5 +8,6 @@
     "Setting": true,
     "Order": true,
     "Notification": true,
-    "Delivery": true
+    "Delivery": true,
+    "Balance": true
 }

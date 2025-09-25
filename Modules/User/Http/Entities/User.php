@@ -7,17 +7,18 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\HasApiTokens;
+use Modules\Balance\Http\Entities\Balance;
 use Modules\Product\Http\Entities\Product;
 use Modules\Product\Http\Entities\Review;
 use Modules\User\Database\Factories\UserFactory;
+use Modules\User\Http\Traits\UserAccessorTrait;
+use Modules\User\Http\Traits\UserRelationTrait;
 
 class User extends Authenticatable
 {
-    use HasFactory, HasApiTokens;
-
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, HasApiTokens, Notifiable,UserAccessorTrait,UserRelationTrait;
 
     /**
      * The attributes that are mass assignable.
@@ -58,42 +59,4 @@ class User extends Authenticatable
     {
         return UserFactory::new();
     }
-
-    public function favorites()
-    {
-        return $this->belongsToMany(
-            Product::class,
-            'user_favorites',
-            'user_id',
-            'product_id'
-        )->withTimestamps();
-    }
-
-    public function cartItems()
-    {
-        return $this->belongsToMany(
-            Product::class,
-            'user_carts',
-            'user_id',
-            'product_id'
-        )
-            ->withPivot('quantity')
-            ->withTimestamps();
-    }
-
-    public function reviews(): HasMany
-    {
-        return $this->hasMany(Review::class);
-    }
-
-    public function addresses():HasMany
-    {
-        return $this->hasMany(Address::class);
-    }
-    public function basket():HasMany
-    {
-        return $this->hasMany(Basket::class);
-    }
-
-
 }

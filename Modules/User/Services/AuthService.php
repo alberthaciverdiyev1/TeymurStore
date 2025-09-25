@@ -91,8 +91,8 @@ class AuthService
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6',
             'otpCode' => 'required|digits:4',
-            'device_token' => 'required|string',
-            'device_type' => 'nullable|string'
+//            'device_token' => 'required|string',
+//            'device_type' => 'nullable|string'
         ]);
 
         $email = $validated['email'];
@@ -123,7 +123,7 @@ class AuthService
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        $notificationTokenResponse = $this->notificationTokenService->updateOrCreate($validated, $user);
+       // $notificationTokenResponse = $this->notificationTokenService->updateOrCreate($validated, $user);
 
         return response()->json([
             'status' => StatusCode::HTTP_CREATED,
@@ -131,7 +131,7 @@ class AuthService
             'data' => [
                 'token' => $token,
                 'user' => $user->only(['id', 'name', 'email']),
-                'notification_data' => $notificationTokenResponse,
+               // 'notification_data' => $notificationTokenResponse,
             ]
         ], StatusCode::HTTP_CREATED);
     }
@@ -144,8 +144,8 @@ class AuthService
         $validated = $request->validate([
             'email' => 'required|email',
             'password' => 'required|string|min:6',
-            'device_token' => 'required|string',
-            'device_type' => 'nullable|string'
+          //  'device_token' => 'required|string',
+           // 'device_type' => 'nullable|string'
         ]);
 
         $user = $this->model->where('email', $validated['email'])->first();
@@ -168,7 +168,7 @@ class AuthService
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        $notificationTokenResponse = $this->notificationTokenService->updateOrCreate($validated, $user);
+        //$notificationTokenResponse = $this->notificationTokenService->updateOrCreate($validated, $user);
 
         return response()->json([
             'status' => StatusCode::HTTP_OK,
@@ -176,7 +176,7 @@ class AuthService
             'data' => [
                 'token' => $token,
                 'user' => $user->only(['id', 'name', 'email']),
-                'notification_data' => $notificationTokenResponse,
+             //   'notification_data' => $notificationTokenResponse,
             ]
         ], StatusCode::HTTP_OK);
     }

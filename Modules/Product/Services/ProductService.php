@@ -42,6 +42,10 @@ class ProductService
             $query->where('is_active', 1);
         }
 
+        if (isset($params['is_suggest'])) {
+            $query->where('is_suggest', $params['is_suggest']);
+        }
+
         if (!empty($params['discount'])) {
             $query->whereNotNull('discount');
         }
@@ -77,7 +81,7 @@ class ProductService
         $data = $query->paginate(20);
 
         $data->getCollection()->transform(function ($product) {
-            $product->rate = $product->reviews_avg_rate !== null ? round($product->reviews_avg_rate, 2) : 0;
+            $product->rate = ($product->reviews_avg_rate !== null) ? round($product->reviews_avg_rate, 2) : 0;
 
             $product->rate_count = $product->reviews_count;
             return $product;

@@ -45,6 +45,7 @@ class ProductUpdateRequest extends FormRequest
             'views' => ['nullable', 'integer', 'min:0'],
             'sales_count' => ['nullable', 'integer', 'min:0'],
             'user_id' => ['required', 'exists:users,id'],
+            'is_suggest' => ['boolean'],
 
             'colors' => ['nullable', 'array'],
             'colors.*' => ['exists:colors,id'],
