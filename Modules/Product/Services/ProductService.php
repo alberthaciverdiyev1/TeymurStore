@@ -186,9 +186,7 @@ class ProductService
     /**
      * Update product
      */
-    /**
-     * Update product
-     */
+
     public function update($request, int $id): JsonResponse
     {
         $data = $request->validated();
@@ -262,28 +260,28 @@ class ProductService
 
     public function statistics(): JsonResponse
     {
-        $withRelations = ['colors', 'sizes', 'images', 'category', 'brand', 'reviews.user'];
+        $withRelations = ['images', 'brand'];
 
         $statistics = [
             'total_products'      => $this->model->count(),
-            'active_products'     => $this->model->where('is_active', 1)->count(),
-            'inactive_products'   => $this->model->where('is_active', 0)->count(),
             'discounted_products' => $this->model->whereNotNull('discount')->count(),
 
-            'most_viewed_products' => $this->model
-                ->with($withRelations)
-                ->orderByDesc('views')
-                ->limit(5)
-                ->get()
-                ->each(fn ($product) => $product->title = $product->getTranslation('title', 'az')),
-
-            'most_reviewed_products' => $this->model
-                ->with($withRelations)
-                ->withCount('reviews')
-                ->orderByDesc('reviews_count')
-                ->limit(5)
-                ->get()
-                ->each(fn ($product) => $product->title = $product->getTranslation('title', 'az')),
+            'most_viewed_products' => ProductResource::collection(
+                $this->model
+                    ->with($withRelations)
+                    ->orderByDesc('views')
+                    ->limit(5)
+                    ->get()
+            ),
+//
+//            'most_reviewed_products' => ProductResource::collection(
+//                $this->model
+//                    ->with($withRelations)
+//                    ->withCount('reviews')
+//                    ->orderByDesc('reviews_count')
+//                    ->limit(5)
+//                    ->get()
+//            ),
         ];
 
         return response()->json([
@@ -293,7 +291,6 @@ class ProductService
             'data'        => $statistics,
         ]);
     }
-
 
 
 }
