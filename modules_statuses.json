@@ -9,5 +9,6 @@
     "Order": true,
     "Notification": true,
     "Delivery": true,
-    "Balance": true
+    "Balance": true,
+    "HelpAndPolicy": true
 }

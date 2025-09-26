@@ -11,8 +11,10 @@ class SizeFactory extends Factory
 
     public function definition()
     {
+        $sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+
         return [
-            'name' => $this->faker->unique()->word(),
+            'name' => $this->faker->unique()->randomElement($sizes),
             'icon' => $this->faker->imageUrl(),
             'sort_order' => $this->faker->numberBetween(0, 100),
             'is_active' => $this->faker->boolean(90),

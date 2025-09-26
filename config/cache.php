@@ -110,5 +110,5 @@ return [
     'product_list_cache_time'=>env('PRODUCT_LIST_CACHE_TIME', 43200),
     'setting_list_cache_time'=>env('SETTING_LIST_CACHE_TIME', 43200),
     'delivery_list_cache_time'=>env('DELIVERY_LIST_CACHE_TIME', 43200),
-
+    'faq_list_cache_time'=>env('FAQ_LIST_CACHE_TIME', 43200)
 ];

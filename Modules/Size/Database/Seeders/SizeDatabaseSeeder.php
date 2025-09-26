@@ -12,6 +12,6 @@ class SizeDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        Size::factory()->count(20)->create();
+        Size::factory()->count(6)->create();
     }
 }
