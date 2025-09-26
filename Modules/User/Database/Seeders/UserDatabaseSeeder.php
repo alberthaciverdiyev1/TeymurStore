@@ -20,5 +20,11 @@ class UserDatabaseSeeder extends Seeder
             'password'          => bcrypt('123456'),
             'email_verified_at' => Carbon::now(),
         ]);
+        User::create([
+            'name'             => 'maharram paputu',
+            'email'              =>'m.aliyev@gmail.com',
+            'password'          => bcrypt('123456'),
+            'email_verified_at' => Carbon::now(),
+        ]);
     }
 }

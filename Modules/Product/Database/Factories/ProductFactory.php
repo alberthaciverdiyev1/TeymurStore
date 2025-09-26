@@ -59,7 +59,7 @@ class ProductFactory extends Factory
             $product->sizes()->attach($sizes);
 
             $images = [
-                ['image_path' => 'https://i.ibb.co/TBtqFwVM/meherrem.jpg']
+                ['image_path' => 'https://i.ibb.co/08Swd2g/pa.png']
             ];
 
             $product->images()->createMany($images);

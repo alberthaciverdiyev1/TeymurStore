@@ -81,6 +81,48 @@ class AuthService
         }
     }
 
+    public function checkOtp(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => 'required|email',
+            'otp'   => 'required|digits:4'
+        ]);
+
+        $email = $validated['email'];
+        $otp   = $validated['otp'];
+
+        try {
+            $otpRecord = OtpEmail::where('email', $email)
+                ->where('otp_code', $otp)
+                ->first();
+
+            if (!$otpRecord) {
+                return response()->json([
+                    'status'  => StatusCode::HTTP_NOT_FOUND,
+                    'message' => 'OTP not found or invalid.'
+                ], StatusCode::HTTP_NOT_FOUND);
+            }
+
+            if (now()->greaterThan($otpRecord->deactive_date)) {
+                return response()->json([
+                    'status'  => StatusCode::HTTP_GONE,
+                    'message' => 'OTP has expired.'
+                ], StatusCode::HTTP_GONE);
+            }
+
+            return response()->json([
+                'status'  => StatusCode::HTTP_OK,
+                'message' => 'OTP verified successfully.'
+            ], StatusCode::HTTP_OK);
+
+        } catch (Exception $exception) {
+            return response()->json([
+                'status'  => StatusCode::HTTP_INTERNAL_SERVER_ERROR,
+                'message' => $exception->getMessage()
+            ], StatusCode::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
     /**
      * Register
      */

@@ -70,4 +70,9 @@ class ProductController extends Controller
     {
         return $this->service->delete($id);
     }
+
+    public function statistics()
+    {
+        return $this->service->statistics();
+    }
 }

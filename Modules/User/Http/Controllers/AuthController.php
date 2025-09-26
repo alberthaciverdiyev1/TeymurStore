@@ -36,6 +36,11 @@ class AuthController extends Controller
         return $this->service->sendOtp($request);
     }
 
+    public function checkOtp(Request $request)
+    {
+        return $this->service->checkOtp($request);
+    }
+
     public function login(Request $request)
     {
         return $this->service->login($request);

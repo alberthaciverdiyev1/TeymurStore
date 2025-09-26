@@ -260,4 +260,40 @@ class ProductService
         return $response;
     }
 
+    public function statistics(): JsonResponse
+    {
+        $withRelations = ['colors', 'sizes', 'images', 'category', 'brand', 'reviews.user'];
+
+        $statistics = [
+            'total_products'      => $this->model->count(),
+            'active_products'     => $this->model->where('is_active', 1)->count(),
+            'inactive_products'   => $this->model->where('is_active', 0)->count(),
+            'discounted_products' => $this->model->whereNotNull('discount')->count(),
+
+            'most_viewed_products' => $this->model
+                ->with($withRelations)
+                ->orderByDesc('views')
+                ->limit(5)
+                ->get()
+                ->each(fn ($product) => $product->title = $product->getTranslation('title', 'az')),
+
+            'most_reviewed_products' => $this->model
+                ->with($withRelations)
+                ->withCount('reviews')
+                ->orderByDesc('reviews_count')
+                ->limit(5)
+                ->get()
+                ->each(fn ($product) => $product->title = $product->getTranslation('title', 'az')),
+        ];
+
+        return response()->json([
+            'success'     => true,
+            'status_code' => 200,
+            'message'     => __('Statistics retrieved successfully.'),
+            'data'        => $statistics,
+        ]);
+    }
+
+
+
 }

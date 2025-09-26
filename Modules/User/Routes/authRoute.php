@@ -6,6 +6,7 @@ Route::prefix('auth')->controller(AuthController::class)->group(function () {
     Route::post('register', 'register')->name('auth.register');
     Route::post('login', 'login')->name('auth.login');
     Route::post('send-otp', 'sendOtp')->name('auth.sendOtp');
+    Route::post('check-otp', 'checkOtp')->name('auth.checkOtp');
     Route::post('reset-password', 'resetPassword')->name('auth.resetPassword');
 
     Route::middleware('auth:sanctum')->group(function () {
