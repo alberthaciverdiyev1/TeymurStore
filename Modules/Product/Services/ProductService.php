@@ -87,7 +87,7 @@ class ProductService
             return $product;
         });
 
-        return response()->json([
+        return response()->json(isset($params['is_application']) ? ProductResource::collection($data) :[
             'success' => 200,
             'message' => __('Products retrieved successfully.'),
             'data' => ProductResource::collection($data),
