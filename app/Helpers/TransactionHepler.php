@@ -4,12 +4,12 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 if (!function_exists('handleTransaction')) {
-    function handleTransaction(callable $callback, string $successMessage = '', $resource = null, int $statusCode = 200)
+    function handleTransaction(callable $callback, string $successMessage = '', $resource = null, int $statusCode = 200, bool $is_application = false)
     {
         try {
             $result = DB::transaction($callback);
 
-            return response()->json([
+            return response()->json($is_application ? ($resource ? $resource::make($result) : $result) : [
                 'success' => 201,
                 'status_code' => $statusCode,
                 'message' => __($successMessage ?? 'Operation successful.'),

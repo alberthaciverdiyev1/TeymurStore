@@ -119,7 +119,7 @@ class ProductService
             $data->rate = round($averageRate, 2);
 
 
-            return response()->json([
+            return response()->json(isset($params['is_application']) ? $data : [
                 'success' => 200,
                 'message' => __('Product details retrieved successfully.'),
                 'data' => $data,
@@ -141,6 +141,8 @@ class ProductService
     public function add($request): JsonResponse
     {
         $data = $request->validated();
+        $is_application = $data['is_application'] ?? false;
+        unset($data['is_application']);
 
         $data['title'] = array_map(static fn($v) => Str::lower($v), $data['title'] ?? []);
         $data['description'] = array_map(static fn($v) => Str::lower($v), $data['description'] ?? []);

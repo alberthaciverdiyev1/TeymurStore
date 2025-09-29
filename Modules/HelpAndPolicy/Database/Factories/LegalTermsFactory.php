@@ -12,8 +12,8 @@ protected  $model = LegalTerm::class;
     public function definition()
     {
        return [
-        'title' => $this->faker->sentence,
-        'description' => $this->faker->paragraph,
+           'html' => $this->faker->randomHtml,
+           'type' => $this->faker->randomElement(['privacy_policy', 'terms_of_service', 'cookie_policy']),
        ];
     }
 }

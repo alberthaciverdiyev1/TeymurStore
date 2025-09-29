@@ -18,8 +18,8 @@ class LegalTerm extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'title',
-        'description',
+        'type',
+        'html'
     ];
 
     public static function newFactory(): LegalTermsFactory

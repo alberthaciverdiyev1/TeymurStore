@@ -17,16 +17,9 @@ class LegalTermsService
 
     public function getAll($request)
     {
-        $params = $request->all();
-        $cacheKey = 'legal_terms_list_' . md5(serialize($params));
+        $query = $this->model->query()->select(['id', 'type', 'html']);
 
-        $data = Cache::remember($cacheKey, config('cache.legal_terms_list_cache_time'), function () use ($params) {
-            $query = $this->model->query()->select(['id', 'title', 'description', 'type']);
-
-            if (isset($params['type'])) $query->where('type', $params['type']);
-
-            return $query->get();
-        });
+        $data = $query->get();
 
         return response()->json([
             'success' => 200,
@@ -35,53 +28,32 @@ class LegalTermsService
         ]);
     }
 
-    public function add($request)
+    public function details($request,$type)
+    {
+        $params = $request->all();
+        $query = $this->model->query()->select(['id', 'type', 'html']);
+        $query = $query->where('type', $type ?? 'terms_and_conditions');
+        $data = $query->get();
+
+        return response()->json(isset($params['is_application']) ?  LegalTermResource::collection($data) : [
+            'success' => 200,
+            'message' => __('Legal Terms retrieved successfully.'),
+            'data' => LegalTermResource::collection($data),
+        ]);
+    }
+
+
+    public function update($request,$type)
     {
         $validated = $request->validated();
 
-        $legal_termss = handleTransaction(
-            fn() => $this->model->create($validated)->refresh(),
-            'LegalTerm added successfully.',
+        $legalTerm = handleTransaction(
+            fn() => tap($this->model->where('type', $type)->firstOrFail())
+                ->update($validated),
+            'Legal Terms updated successfully.',
             LegalTermResource::class
         );
 
-        Cache::forget('legal_terms_list_' . md5(serialize([])));
-
-        return $legal_termss;
-    }
-
-    public function update($request,int $id)
-    {
-        $validated = $request->validated();
-
-        $legal_terms = handleTransaction(
-            function () use ($validated, $id) {
-                $legal_terms = $this->model->findOrFail($id);
-                $legal_terms->update($validated);
-                return $legal_terms->refresh();
-            },
-            'LegalTerm updated successfully.',
-            LegalTermResource::class
-        );
-
-        Cache::forget('legal_terms_list_*');
-
-        return $legal_terms;
-    }
-
-    public function delete($id)
-    {
-        $response = handleTransaction(
-            function () use ($id) {
-                $legal_terms = $this->model->findOrFail($id);
-                $legal_terms->delete();
-                return $legal_terms;
-            },
-            'LegalTerm deleted successfully.'
-        );
-
-        Cache::forget('legal_terms_list_*');
-
-        return $response;
+        return $legalTerm;
     }
 }
