@@ -22,15 +22,14 @@ class UserService
     public function changeEmail(Request $request)
     {
         $validated = $request->validate([
-            'email' => 'required|string|email|exists:users,email',
-            'new_email' => 'required|string|email|unique:users,email',
+            'email' => 'required|string|email|unique:users,email',
             'otpCode' => 'required|digits:4',
         ]);
 
         $user = $request->user();
 
         $otpCheck = OtpEmail::where([
-            'email' => $validated['email'],
+            'email' => $user['email'],
             'otp_code' => $validated['otpCode']
         ])->where('deactive_date', '>', now())->first();
 
@@ -42,7 +41,7 @@ class UserService
         }
 
         return handleTransaction(function () use ($user, $validated, $otpCheck) {
-            $user->email = $validated['new_email'];
+            $user->email = $validated['email'];
             $user->save();
 
             $otpCheck->delete();
