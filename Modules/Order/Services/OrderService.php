@@ -36,7 +36,6 @@ class OrderService
     public function getAll(Request $request): JsonResponse
     {
         $userId = auth()->id();
-        $isApplication = (bool) $request->query('is_application', false);
 
         $orders = $this->model
             ->with(['items', 'latestStatus', 'address', 'user'])
@@ -45,7 +44,6 @@ class OrderService
             ->get();
 
         return responseHelper(
-            $isApplication,
             __('Order data retrieved successfully.'),
             200,
             OrderResource::collection($orders)
@@ -66,23 +64,16 @@ class OrderService
                 ])
                 ->where('user_id', auth()->id())
                 ->findOrFail($id);
-            return response()->json(data: [
-                'success' => 200,
-                'message' => __('Order details retrieved successfully.'),
-                'data' => new OrderDetailResource($order),
-            ]);
+            return responseHelper( 'Order details retrieved successfully.',200,new OrderDetailResource($order));
+
         } catch (ModelNotFoundException $e) {
-            return response()->json([
-                'success' => 404,
-                'message' => __('Order not found.'),
-            ], 404);
+            return responseHelper('Order not found.',404);
         }
     }
 
     public function orderFromBasket($request): JsonResponse
     {
         $validated = $request->validated();
-        $is_application = $validated['is_application'] ?? false;
 
         try {
 
@@ -91,7 +82,7 @@ class OrderService
                 ->first();
 
             if (!$address) {
-                return responseHelper($is_application, __('Please set a valid default address with a city before placing an order.'), 400);
+                return responseHelper('Please set a valid default address with a city before placing an order.', 400);
             }
 
             $deliveryResponse = $this->deliveryService
@@ -101,7 +92,7 @@ class OrderService
             $delivery = $deliveryResponse['data'] ?? null;
 
             if (!$delivery) {
-                return responseHelper($is_application, __('Delivery service is not available for your city.'), 400);
+                return responseHelper('Delivery service is not available for your city.', 400);
             }
 
             $basket = Basket::with(['product'])
@@ -118,7 +109,7 @@ class OrderService
 
             foreach ($basket as $item) {
                 if ($item->product->stock_count < $item->quantity) {
-                    return responseHelper($is_application, __('Insufficient stock for product: :product', ['product' => $item->product->title['az'] ?? $item->product->sku,]), 400);
+                    return responseHelper("Insufficient stock for product: $item->product->title['az']", 400);
                 }
             }
 
@@ -139,22 +130,22 @@ class OrderService
             }), 2);
             $validated['shipping_price'] = $validated['total_price'] < $delivery['free_from'] ? ($delivery['price'] ?? 0) : 0;
 
-            if ($validated['pay_with_balance']) {
+            if (isset($validated['pay_with_balance']) && $validated['pay_with_balance']) {
                 $userBalance = $this->balanceService->getBalance()->getData(true)['data']['balance'] ?? 0;
 
                 if ($userBalance < ($validated['total_price'] + $validated['shipping_price'])) {
-                    return responseHelper($is_application, __('Insufficient balance to complete the order.'), 400);
+                    return responseHelper('Insufficient balance to complete the order.', 400);
                 }
 
                 $balanceResponse = $this->balanceService->withdraw($validated['user_id'], ($validated['total_price'] + $validated['shipping_price']), 'Payment for order with transaction ID: ' . $validated['transaction_id']);
                 $balanceContent = $balanceResponse->getData(true);
 
                 if ($balanceContent['success'] !== 201) {
-                    return responseHelper($is_application, 'Failed to process payment from balance. Please try again.', 500);
+                    return responseHelper('Failed to process payment from balance. Please try again.', 500);
                 }
+            unset($validated['pay_with_balance']);
             }
 
-            unset($validated['pay_with_balance'], $validated['is_application']);
             $validated['paid_at'] = now();
 
             $data = handleTransaction(
@@ -197,7 +188,7 @@ class OrderService
                 Basket::destroy($basket->pluck('id')->toArray());
             }
 
-            return responseHelper($is_application, 'Order added successfully.', 201);
+            return responseHelper('Order added successfully.', 201);
 
 
         } catch (\Throwable $e) {
@@ -206,7 +197,7 @@ class OrderService
                 'error' => $e->getMessage(),
             ]);
 
-            return responseHelper($is_application, 'Something went wrong while placing the order.', 500);
+            return responseHelper('Something went wrong while placing the order.', 500);
 
         }
     }
@@ -214,7 +205,6 @@ class OrderService
     public function buyOne($request, $product_id): JsonResponse
     {
         $validated = $request->validated();
-        $is_application = $validated['is_application'] ?? false;
         try {
 
             $address = Address::where('user_id', auth()->id())
@@ -222,7 +212,7 @@ class OrderService
                 ->first();
 
             if (!$address) {
-                return responseHelper($is_application, __('Please set a valid default address with a city before placing an order.'), 400);
+                return responseHelper('Please set a valid default address with a city before placing an order.', 400);
             }
 
             $deliveryResponse = $this->deliveryService
@@ -232,13 +222,13 @@ class OrderService
             $delivery = $deliveryResponse['data'] ?? null;
 
             if (!$delivery) {
-                return responseHelper($is_application, __('Delivery service is not available for your city.'), 400);
+                return responseHelper('Delivery service is not available for your city.', 400);
             }
 
             $product = Product::findOrFail($product_id);
 
             if ($product->stock_count < 1) {
-                return responseHelper($is_application, __('Insufficient stock for product: :product', ['product' => $product->title['az'] ?? $product->sku,]), 400);
+                return responseHelper("Insufficient stock for product: $product->title['az']", 400);
             }
 
             $validated['address_id'] = $address->id;
@@ -256,7 +246,7 @@ class OrderService
                 $userBalance = $this->balanceService->getBalance()->getData(true)['data']['balance'] ?? 0;
 
                 if ($userBalance < ($validated['total_price'] + $validated['shipping_price'])) {
-                    return responseHelper($is_application, __('Insufficient balance to complete the order.'), 400);
+                    return responseHelper('Insufficient balance to complete the order.', 400);
                 }
 
                 $balanceResponse = $this->balanceService->withdraw(
@@ -268,11 +258,11 @@ class OrderService
                 $balanceContent = $balanceResponse->getData(true);
 
                 if ($balanceContent['success'] !== 201) {
-                    return responseHelper($is_application, 'Failed to process payment from balance. Please try again.', 500);
+                    return responseHelper( 'Failed to process payment from balance. Please try again.', 500);
                 }
+            unset($validated['pay_with_balance']);
             }
 
-            unset($validated['pay_with_balance'], $validated['is_application']);
             $validated['paid_at'] = now();
 
             $data = handleTransaction(
@@ -306,7 +296,7 @@ class OrderService
                 Product::where('id', $product->id)->increment('sales_count', 1);
             }
 
-            return responseHelper($is_application, 'Order added successfully.', 201);
+            return responseHelper( 'Order added successfully.', 201);
 
         } catch (\Throwable $e) {
             \Log::error('Order creation failed', [
@@ -314,7 +304,7 @@ class OrderService
                 'error' => $e->getMessage(),
             ]);
 
-            return responseHelper($is_application, 'Something went wrong while placing the order.', 500);
+            return responseHelper('Something went wrong while placing the order.', 500);
 
         }
     }

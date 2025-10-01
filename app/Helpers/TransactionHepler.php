@@ -4,26 +4,44 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 if (!function_exists('handleTransaction')) {
-    function handleTransaction(callable $callback, string $successMessage = '', $resource = null, int $statusCode = 200, bool $is_application = false)
+    function handleTransaction(callable $callback, string $successMessage = '', $resource = null, int $statusCode = 200, bool $x = false)
     {
+        $is_application = (bool) request()->query('is_application', false);
+        \Log::info('Transaction is_application: ' . $is_application);
+
         try {
             $result = DB::transaction($callback);
 
-            return response()->json($is_application ? ($resource ? $resource::make($result) : $result) : [
-                'success' => 201,
+            $data = $result;
+            if ($resource) {
+                if (is_string($resource) && class_exists($resource)) {
+                    $data = $resource::make($result);
+                } elseif ($resource instanceof \Illuminate\Http\Resources\Json\JsonResource) {
+                    $data = $resource;
+                }
+            }
+
+            $responseArray = [
+                'success' => true,
                 'status_code' => $statusCode,
-                'message' => __($successMessage ?? 'Operation successful.'),
-                'data' => $resource ? $resource::make($result) : $result,
-            ]);
+                'message' => __($successMessage ?: 'Operation successful.'),
+                'data' => $data,
+            ];
+
+            return response()->json($responseArray);
+
         } catch (\Exception $e) {
             Log::error($e->getMessage());
 
-            return response()->json([
+            $errorResponse = [
                 'success' => false,
                 'status_code' => 500,
                 'message' => __('Operation failed.'),
                 'error' => $e->getMessage(),
-            ]);
+            ];
+
+            return response()->json($errorResponse);
         }
     }
+
 }
