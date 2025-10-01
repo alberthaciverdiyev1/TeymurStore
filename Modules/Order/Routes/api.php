@@ -18,7 +18,8 @@ Route::prefix('order')->controller(\Modules\Order\Http\Controllers\OrderControll
 
     Route::middleware('auth:sanctum')->group(function () {
     Route::get('/', 'getAll')->name('order.list');
-        Route::post('/', 'add')->name('order.add');
+        Route::post('/', 'orderFromBasket')->name('order.orderFromBasket');
+        Route::post('/{product_id}', 'buyOne')->name('order.buyOne');
         Route::get('/{id}', 'details')->name('order.details');
         Route::put('/{id}', 'update')->name('order.update');
         Route::delete('/{id}', 'delete')->name('order.delete');

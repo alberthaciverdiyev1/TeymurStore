@@ -31,7 +31,7 @@ class OrderController extends Controller
 //        }
     }
 
-    public function getAll(\Illuminate\Support\Facades\Request $request): JsonResponse
+    public function getAll(Request $request): JsonResponse
     {
         return $this->service->getAll($request);
     }
@@ -41,9 +41,14 @@ class OrderController extends Controller
         return $this->service->details($id);
     }
 
-    public function add(OrderAddRequest $request): JsonResponse
+    public function orderFromBasket(OrderAddRequest $request): JsonResponse
     {
-        return $this->service->add($request);
+        return $this->service->orderFromBasket($request);
+    }
+
+    public function buyOne(OrderAddRequest $request, $product_id): JsonResponse
+    {
+        return $this->service->buyOne($request, $product_id);
     }
 
     public function update(int $id, OrderUpdateRequest $request): JsonResponse

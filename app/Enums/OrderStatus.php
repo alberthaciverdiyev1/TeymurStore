@@ -8,6 +8,7 @@ enum OrderStatus: int
     case PROCESSING = 1;
     case SHIPPED = 2;
     case DELIVERED = 3;
+    case RETURNED= 4;
 
     public function label(): string
     {
@@ -16,6 +17,7 @@ enum OrderStatus: int
             self::PROCESSING => __('Processing'),
             self::SHIPPED => __('Shipped'),
             self::DELIVERED => __('Delivered'),
+            self::RETURNED => __('Returned'),
         };
     }
 
@@ -26,6 +28,7 @@ enum OrderStatus: int
             1 => self::PROCESSING,
             2 => self::SHIPPED,
             3 => self::DELIVERED,
+            4 => self::RETURNED,
             default => throw new \InvalidArgumentException("Invalid OrderStatus value: {$value}"),
         };
     }
@@ -37,6 +40,7 @@ enum OrderStatus: int
             'processing' => self::PROCESSING,
             'shipped' => self::SHIPPED,
             'delivered' => self::DELIVERED,
+            'returned' => self::RETURNED,
             default => throw new \InvalidArgumentException("Invalid OrderStatus string: {$value}"),
         };
     }
