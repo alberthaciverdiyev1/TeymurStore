@@ -8,6 +8,7 @@ use Modules\Product\Http\Entities\Product;
 use Modules\Product\Http\Entities\ProductImage;
 use Modules\Product\Http\Resources\ProductResource;
 use Illuminate\Support\Str;
+use App\Helpers\TranslateHelper as Translate;
 
 class ProductService
 {
@@ -137,22 +138,37 @@ class ProductService
      * Add product
      */
 
+
     public function add($request): JsonResponse
     {
         $data = $request->validated();
-        $is_application = $data['is_application'] ?? false;
-        unset($data['is_application']);
-
-        $data['title'] = array_map(static fn($v) => Str::lower($v), $data['title'] ?? []);
-        $data['description'] = array_map(static fn($v) => Str::lower($v), $data['description'] ?? []);
 
         $product = handleTransaction(function () use ($data, $request) {
             $images_arr = $request->hasFile('images') ? $request->file('images') : [];
 
+            $languages = ['az', 'ru', 'en', 'tr'];
+
+            $title = $data['title'] ?? ['az' => ''];
+            foreach ($languages as $lang) {
+                if (empty($title[$lang])) {
+                    $title[$lang] = Translate::translate($title['az'], $lang);
+                }
+                $title[$lang] = Str::lower($title[$lang]);
+            }
+
+            $description = $data['description'] ?? ['az' => ''];
+            foreach ($languages as $lang) {
+                if (empty($description[$lang])) {
+                    $description[$lang] = Translate::translate($description['az'], $lang);
+                }
+                $description[$lang] = Str::lower($description[$lang]);
+            }
+
             $translations = [
-                'title' => $data['title'] ?? ['az' => ''],
-                'description' => $data['description'] ?? ['az' => ''],
+                'title' => $title,
+                'description' => $description,
             ];
+
             unset($data['title'], $data['description'], $data['images']);
 
             $product = $this->model->create($data);
@@ -181,7 +197,6 @@ class ProductService
 
         return $product;
     }
-
     /**
      * Update product
      */
