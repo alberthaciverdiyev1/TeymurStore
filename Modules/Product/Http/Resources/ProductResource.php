@@ -30,7 +30,7 @@ class ProductResource extends JsonResource
             'discount' => $this->discount ?? 0,
             'stock_count' => $this->stock_count ?? 0,
             'is_active' => $this->is_active,
-            'sale_count' => $this->sale_count ?? 0,
+            'sales_count' => $this->sales_count ?? 0,
            // 'title' => $this->getTranslation('title', $locale, false) ?? $this->getTranslation('title', 'az'),
             //'description' => $this->getTranslation('description', $locale, false) ?? $this->getTranslation('description', 'az'),
             'colors' => ColorResource::collection($this->whenLoaded('colors')),

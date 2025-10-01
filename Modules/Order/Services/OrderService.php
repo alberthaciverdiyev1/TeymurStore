@@ -267,12 +267,17 @@ class OrderService
 
             $data = handleTransaction(
                 fn() => $this->model->create($validated)->refresh(),
-                'Order added successfully.'
+                'Order added successfully.',
+                null,
+                201
             );
 
             $content = $data->getData(true);
 
-            if ($content['success'] === 201) {
+
+
+            if ($content['status_code'] === 201) {
+//            return response()->json($content);
                 $orderId = (int)$content['data']['id'];
 
                 handleTransaction(
@@ -281,6 +286,8 @@ class OrderService
                         'status' => OrderStatusEnum::PLACED,
                     ])->refresh(),
                 );
+                $product->decrement('stock_count', 1);
+                $product->increment('sales_count', 1);
 
                 handleTransaction(
                     fn() => OrderItem::create([
@@ -292,8 +299,8 @@ class OrderService
                     ])
                 );
 
-                Product::where('id', $product->id)->decrement('stock_count', 1);
-                Product::where('id', $product->id)->increment('sales_count', 1);
+              //  Product::where('id', $product->id)->decrement('stock_count', 1);
+               // Product::where('id', $product->id)->increment('sales_count', 1);
             }
 
             return responseHelper( 'Order added successfully.', 201);

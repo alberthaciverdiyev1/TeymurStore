@@ -4,7 +4,6 @@ namespace Modules\Product\Services;
 
 use App\Enums\Gender;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Cache;
 use Modules\Product\Http\Entities\Product;
 use Modules\Product\Http\Entities\ProductImage;
 use Modules\Product\Http\Resources\ProductResource;
@@ -180,8 +179,6 @@ class ProductService
             return $product->refresh();
         }, 'Product added successfully.', ProductResource::class);
 
-        Cache::forget('products_list_all');
-
         return $product;
     }
 
@@ -235,8 +232,6 @@ class ProductService
             return $product->refresh();
         }, 'Product updated successfully.', ProductResource::class);
 
-        Cache::forget('products_list_all');
-
         return $product;
     }
 
@@ -254,8 +249,6 @@ class ProductService
             },
             'Product deleted successfully.'
         );
-
-        Cache::forget('products_list_*');
 
         return $response;
     }
