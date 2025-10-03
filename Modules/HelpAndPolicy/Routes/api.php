@@ -25,10 +25,9 @@ Route::prefix('faq')->controller(\Modules\HelpAndPolicy\Http\Controllers\FaqCont
 });
 
 Route::prefix('legal-terms')->controller(\Modules\HelpAndPolicy\Http\Controllers\LegalTermController::class)->group(function () {
-    Route::get('/{type}', 'details')->name('legal_terms.details');
+        Route::get('/', 'getAll')->name('legal_terms.list');
 
     Route::middleware('auth:sanctum')->group(function () {
-        Route::get('/', 'getAll')->name('legal_terms.list');
         Route::put('/{type}', 'update')->name('legal_terms.update');
     });
 

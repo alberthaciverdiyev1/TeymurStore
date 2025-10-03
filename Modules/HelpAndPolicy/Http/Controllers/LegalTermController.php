@@ -20,10 +20,6 @@ class LegalTermController
     {
         return $this->service->getAll($request);
     }
-    public function details(Request $request,$type)
-    {
-        return $this->service->details($request,$type);
-    }
 
     public function update(LegalTermAddRequest $request,$type)
     {

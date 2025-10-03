@@ -17,22 +17,16 @@ class LegalTermsService
 
     public function getAll($request)
     {
+        $params = $request->all();
+
         $query = $this->model->query()->select(['id', 'type', 'html']);
+        $query = $query->where('type', $params['type'] ?? 'main_page');
 
         $data = $query->get();
 
         return responseHelper('Legal Terms retrieved successfully.', 200, LegalTermResource::collection($data));
     }
 
-    public function details($request,$type)
-    {
-        $params = $request->all();
-        $query = $this->model->query()->select(['id', 'type', 'html']);
-        $query = $query->where('type', $type ?? 'terms_and_conditions');
-        $data = $query->get();
-        return responseHelper('Legal Term retrieved successfully.', 200, LegalTermResource::collection($data));
-
-    }
 
 
     public function update($request,$type)
