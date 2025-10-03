@@ -37,7 +37,7 @@ class DatabaseSeeder extends Seeder
             NotificationDatabaseSeeder::class,
             DeliveryDatabaseSeeder::class,
             HelpAndPolicyDatabaseSeeder::class,
-            PromoCodeDatabaseSeeder::class,
+        //    PromoCodeDatabaseSeeder::class,
         ]);
     }
 }
