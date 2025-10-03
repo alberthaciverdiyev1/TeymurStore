@@ -29,11 +29,7 @@ class SettingService
             fn () => $this->model->all()
         );
 
-        return response()->json([
-            'success' => 200,
-            'message' => __('Setting retrieved successfully.'),
-            'data'    => SettingResource::collection($data),
-        ]);
+        return responseHelper('Settings retrieved successfully.', 200, SettingResource::collection($data));
     }
 
     /**
