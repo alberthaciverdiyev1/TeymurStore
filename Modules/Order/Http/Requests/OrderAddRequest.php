@@ -23,6 +23,7 @@ class OrderAddRequest extends FormRequest
         return [
             'note' => ['nullable', 'string'],
             'pay_with_balance' => ['nullable', 'boolean'],
+            'promo_code' => ['nullable', 'string', 'exists:promo_codes,code'],
         ];
     }
 }

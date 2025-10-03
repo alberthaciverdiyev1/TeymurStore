@@ -13,6 +13,7 @@ use Modules\Delivery\Database\Seeders\DeliveryDatabaseSeeder;
 use Modules\HelpAndPolicy\Database\Seeders\HelpAndPolicyDatabaseSeeder;
 use Modules\Notification\Database\Seeders\NotificationDatabaseSeeder;
 use Modules\Product\Database\Seeders\ProductDatabaseSeeder;
+use Modules\PromoCode\Database\Seeders\PromoCodeDatabaseSeeder;
 use Modules\Setting\Database\Seeders\SettingDatabaseSeeder;
 use Modules\Size\Database\Seeders\SizeDatabaseSeeder;
 use Modules\User\Database\Seeders\UserDatabaseSeeder;
@@ -36,6 +37,7 @@ class DatabaseSeeder extends Seeder
             NotificationDatabaseSeeder::class,
             DeliveryDatabaseSeeder::class,
             HelpAndPolicyDatabaseSeeder::class,
+            PromoCodeDatabaseSeeder::class,
         ]);
     }
 }

@@ -10,5 +10,6 @@
     "Notification": true,
     "Delivery": true,
     "Balance": true,
-    "HelpAndPolicy": true
+    "HelpAndPolicy": true,
+    "PromoCode": true
 }

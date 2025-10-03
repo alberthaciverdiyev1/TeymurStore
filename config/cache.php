@@ -112,4 +112,5 @@ return [
     'delivery_list_cache_time'=>env('DELIVERY_LIST_CACHE_TIME', 43200),
     'faq_list_cache_time'=>env('FAQ_LIST_CACHE_TIME', 43200),
     'legal_terms_list_cache_time'=>env('LEGAL_TERMS_LIST_CACHE_TIME', 43200),
+    'promo_code_list_cache_time'=>env('PROMO_CODE_LIST_CACHE_TIME', 43200)
 ];

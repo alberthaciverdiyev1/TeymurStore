@@ -16,6 +16,7 @@ use Modules\Order\Http\Entities\OrderStatus;
 use Modules\Order\Http\Resources\OrderDetailResource;
 use Modules\Order\Http\Resources\OrderResource;
 use Modules\Product\Http\Entities\Product;
+use Modules\PromoCode\Services\PromoCodeService;
 use Modules\User\Http\Entities\Address;
 use Modules\User\Http\Entities\Basket;
 use App\Enums\OrderStatus as OrderStatusEnum;
@@ -25,12 +26,14 @@ class OrderService
     private Order $model;
     private DeliveryService $deliveryService;
     private BalanceService $balanceService;
+    private PromoCodeService $promoCodeService;
 
-    public function __construct(Order $model, DeliveryService $deliveryService, BalanceService $balanceService)
+    public function __construct(Order $model, DeliveryService $deliveryService, BalanceService $balanceService, PromoCodeService $promoCodeService)
     {
         $this->model = $model;
         $this->deliveryService = $deliveryService;
         $this->balanceService = $balanceService;
+        $this->promoCodeService = $promoCodeService;
     }
 
     public function getAll(Request $request): JsonResponse
@@ -64,10 +67,10 @@ class OrderService
                 ])
                 ->where('user_id', auth()->id())
                 ->findOrFail($id);
-            return responseHelper( 'Order details retrieved successfully.',200,new OrderDetailResource($order));
+            return responseHelper('Order details retrieved successfully.', 200, new OrderDetailResource($order));
 
         } catch (ModelNotFoundException $e) {
-            return responseHelper('Order not found.',404);
+            return responseHelper('Order not found.', 404);
         }
     }
 
@@ -143,7 +146,7 @@ class OrderService
                 if ($balanceContent['success'] !== 201) {
                     return responseHelper('Failed to process payment from balance. Please try again.', 500);
                 }
-            unset($validated['pay_with_balance']);
+                unset($validated['pay_with_balance']);
             }
 
             $validated['paid_at'] = now();
@@ -242,6 +245,13 @@ class OrderService
 
             $validated['shipping_price'] = $validated['total_price'] < $delivery['free_from'] ? ($delivery['price'] ?? 0) : 0;
 
+            if (isset($validated['promo_code']) && $validated['promo_code']) {
+//                $response = $this->promoCodeService->check($validated['promo_code'], true);
+//                \Log::info($response['status_code']);
+                unset($validated['promo_code']);
+
+            }
+
             if (isset($validated['pay_with_balance']) && $validated['pay_with_balance']) {
                 $userBalance = $this->balanceService->getBalance()->getData(true)['data']['balance'] ?? 0;
 
@@ -258,9 +268,9 @@ class OrderService
                 $balanceContent = $balanceResponse->getData(true);
 
                 if ($balanceContent['success'] !== 201) {
-                    return responseHelper( 'Failed to process payment from balance. Please try again.', 500);
+                    return responseHelper('Failed to process payment from balance. Please try again.', 500);
                 }
-            unset($validated['pay_with_balance']);
+                unset($validated['pay_with_balance']);
             }
 
             $validated['paid_at'] = now();
@@ -273,7 +283,6 @@ class OrderService
             );
 
             $content = $data->getData(true);
-
 
 
             if ($content['status_code'] === 201) {
@@ -299,11 +308,11 @@ class OrderService
                     ])
                 );
 
-              //  Product::where('id', $product->id)->decrement('stock_count', 1);
-               // Product::where('id', $product->id)->increment('sales_count', 1);
+                //  Product::where('id', $product->id)->decrement('stock_count', 1);
+                // Product::where('id', $product->id)->increment('sales_count', 1);
             }
 
-            return responseHelper( 'Order added successfully.', 201);
+            return responseHelper('Order added successfully.', 201);
 
         } catch (\Throwable $e) {
             \Log::error('Order creation failed', [

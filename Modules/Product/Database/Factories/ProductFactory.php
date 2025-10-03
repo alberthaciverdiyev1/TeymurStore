@@ -52,17 +52,29 @@ class ProductFactory extends Factory
     public function configure()
     {
         return $this->afterCreating(function (Product $product) {
+            // Random colors
             $colors = Color::inRandomOrder()->take(rand(1, 3))->pluck('id');
             $product->colors()->attach($colors);
 
+            // Random sizes
             $sizes = Size::inRandomOrder()->take(rand(1, 3))->pluck('id');
             $product->sizes()->attach($sizes);
 
+            // Images array
             $images = [
-                ['image_path' => 'https://i.ibb.co/08Swd2g/pa.png']
+                ['image_path' => 'https://ireland.apollo.olxcdn.com/v1/files/oxubl0i0ke8v1-PL/image;s=1000x700'],
+                ['image_path' => 'https://ireland.apollo.olxcdn.com/v1/files/0qfhamoiztpn3-PL/image;s=1000x700'],
+                ['image_path' => 'https://ireland.apollo.olxcdn.com/v1/files/0qfhamoiztpn3-PL/image;s=1000x700'],
+                ['image_path' => 'https://ireland.apollo.olxcdn.com/v1/files/s5cuywo9lcal3-PL/image;s=1000x700'],
+                ['image_path' => 'https://ireland.apollo.olxcdn.com/v1/files/v6nubmokw7mm2-PL/image;s=1000x700'],
+                ['image_path' => 'https://ireland.apollo.olxcdn.com/v1/files/beyc3fqlzzyt3-PL/image;s=1000x700'],
+                ['image_path' => 'https://ireland.apollo.olxcdn.com/v1/files/9dauuwfw7ug43-PL/image;s=1000x700']
             ];
+
+            shuffle($images);
 
             $product->images()->createMany($images);
         });
     }
+
 }

@@ -134,6 +134,34 @@ class ProductService
         }
     }
 
+    public function detailsAdmin(int $id): JsonResponse
+    {
+        try {
+            $product = $this->model->with([
+                'colors', 'sizes', 'images', 'category', 'brand', 'reviews.user'
+            ])->findOrFail($id);
+
+            $averageRate = $product->reviews()->avg('rate') ?? 5;
+
+            $data = ProductResource::make($product);
+            $data->rate = round($averageRate, 2);
+
+
+            return response()->json([
+                'success' => 200,
+                'message' => __('Product details retrieved successfully.'),
+                'data' => $product,
+            ]);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => 404,
+                'message' => __('Product not found.'),
+                'data' => [],
+            ]);
+        }
+    }
+
     /**
      * Add product
      */

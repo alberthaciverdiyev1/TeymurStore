@@ -53,6 +53,10 @@ class ProductController extends Controller
     {
         return $this->service->details($id);
     }
+    public function detailsAdmin(int $id)
+    {
+        return $this->service->detailsAdmin($id);
+    }
 
     /**
      * Show the form for editing the specified resource.

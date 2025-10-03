@@ -7,6 +7,7 @@ Route::prefix('product')->controller(\Modules\Product\Http\Controllers\ProductCo
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/', 'add')->name('product.add');
+        Route::get('/details/{id}', 'detailsAdmin')->name('product.detailsAdmin');
         Route::put('/{id}', 'update')->name('product.update');
         Route::delete('/{id}', 'delete')->name('product.delete');
     });
