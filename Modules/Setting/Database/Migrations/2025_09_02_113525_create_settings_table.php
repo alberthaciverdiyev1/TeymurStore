@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('phone_number_2')->default('0709990569')->nullable();
             $table->string('phone_number_3')->default('0709990569')->nullable();
             $table->string('phone_number_4')->default('0709990569')->nullable();
-            $table->string('google_map_url')->default('')->nullable();
+            $table->string('google_map_url')->default('https://maps.app.goo.gl/2ixKnqaSq5AeoXsu8')->nullable();
             $table->string('address')->default('Baku')->nullable();
 
             $table->timestamps();

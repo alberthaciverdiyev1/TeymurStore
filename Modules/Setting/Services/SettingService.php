@@ -23,7 +23,7 @@ class SettingService
     {
         $cacheKey = 'settings_list';
 
-        $data = Cache::tags(['settings'])->remember(
+        $data = Cache::remember(
             $cacheKey,
             config('cache.setting_list_cache_time', 3600),
             fn () => $this->model->all()
@@ -53,7 +53,7 @@ class SettingService
             SettingResource::class
         );
 
-        Cache::tags(['settings'])->flush();
+        Cache::forget('settings_list');
 
         return $setting;
     }

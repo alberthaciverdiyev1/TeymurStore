@@ -16,11 +16,11 @@ class HelpAndPolicyDatabaseSeeder extends Seeder
         Faq::factory()->count(50)->create();
 
         LegalTerm::create([
-            'type' => 'terms_of_service',
+            'type' => 'register_page',
             'html' => '<h1>Terms of Service</h1><p>These are the terms of service...</p>'
         ]);
         LegalTerm::create([
-            'type' => 'privacy_policy',
+            'type' => 'main_page',
             'html' => '<h1>Privacy Policy</h1><p>This is the privacy policy...</p>'
         ]);
     }
