@@ -5,6 +5,7 @@ namespace Modules\Setting\Http\Controllers;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Modules\Setting\Http\SettingRequest;
 use Modules\Setting\Services\SettingService;
 use Nwidart\Modules\Facades\Module;
 
@@ -39,7 +40,7 @@ class SettingController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function update(Request $request)
+    public function update(SettingRequest $request)
     {
         return $this->service->update($request);
     }
