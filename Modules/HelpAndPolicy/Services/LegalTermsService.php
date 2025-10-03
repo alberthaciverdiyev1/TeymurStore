@@ -21,11 +21,7 @@ class LegalTermsService
 
         $data = $query->get();
 
-        return response()->json([
-            'success' => 200,
-            'message' => __('LegalTerms retrieved successfully.'),
-            'data' => LegalTermResource::collection($data),
-        ]);
+        return responseHelper('Legal Terms retrieved successfully.', 200, LegalTermResource::collection($data));
     }
 
     public function details($request,$type)
@@ -34,12 +30,8 @@ class LegalTermsService
         $query = $this->model->query()->select(['id', 'type', 'html']);
         $query = $query->where('type', $type ?? 'terms_and_conditions');
         $data = $query->get();
+        return responseHelper('Legal Term retrieved successfully.', 200, LegalTermResource::collection($data));
 
-        return response()->json(isset($params['is_application']) ?  LegalTermResource::collection($data) : [
-            'success' => 200,
-            'message' => __('Legal Terms retrieved successfully.'),
-            'data' => LegalTermResource::collection($data),
-        ]);
     }
 
 

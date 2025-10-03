@@ -28,11 +28,7 @@ class FaqService
             return $query->get();
         });
 
-        return response()->json([
-            'success' => 200,
-            'message' => __('Faqs retrieved successfully.'),
-            'data' => FaqResource::collection($data),
-        ]);
+        return responseHelper( 'Faqs retrieved successfully.',200, FaqResource::collection($data));
     }
 
     public function add($request)
