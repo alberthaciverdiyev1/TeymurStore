@@ -30,12 +30,12 @@ class FavoriteService
         return response()->json([
             'success' => 200,
             'message' => __('Favorites retrieved successfully.'),
-            'data'    => $favorites->items(),
-            'meta'    => [
+            'data' => $favorites->items(),
+            'meta' => [
                 'current_page' => $favorites->currentPage(),
-                'last_page'    => $favorites->lastPage(),
-                'per_page'     => $favorites->perPage(),
-                'total'        => $favorites->total(),
+                'last_page' => $favorites->lastPage(),
+                'per_page' => $favorites->perPage(),
+                'total' => $favorites->total(),
             ],
         ]);
     }
@@ -49,19 +49,14 @@ class FavoriteService
 
         $product = $this->product->find($productId);
         if (!$product) {
-            return response()->json([
-                'success' => 404,
-                'message' => __('Product not found.'),
-            ], 404);
+            return responseHelper('Product not found.', 404);
         }
 
-        $user->favorites()->syncWithoutDetaching([$product->id]);
+        $result = $user->favorites()->toggle([$product->id]);
 
-        return response()->json([
-            'success' => 200,
-            'message' => __('Product added to favorites.'),
-            'data'    => $product,
-        ]);
+        $action = count($result['attached']) > 0 ? 'added' : 'removed';
+
+        return responseHelper(($action === 'added' ? 'Product added to favorites.' : 'Product removed from favorites.'), 200);
     }
 
     /**
@@ -74,25 +69,15 @@ class FavoriteService
         $product = $this->product->find($productId);
 
         if (!$product) {
-            return response()->json([
-                'success' => 404,
-                'message' => __('Product not found.'),
-            ], 404);
+            return responseHelper('Product not found.', 404);
         }
 
         if ($user->favorites()->where('product_id', $product->id)->exists()) {
             $user->favorites()->detach($product->id);
-
-            return response()->json([
-                'success' => 200,
-                'message' => __('Product removed from favorites.'),
-            ]);
+            return responseHelper('Product removed from favorites.', 200);
         }
+        return responseHelper('Product was not in favorites.', 200);
 
-        return response()->json([
-            'success' => 200,
-            'message' => __('Product was not in favorites.'),
-        ]);
     }
 
 }
