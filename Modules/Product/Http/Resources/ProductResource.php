@@ -21,6 +21,7 @@ class ProductResource extends JsonResource
             'title'=>$this->title,
             'description'=>$this->description,
             'sku' => $this->sku,
+            'is_favorite' => $this->is_favorite,
             'rate'=>$this->rate,
             'rate_count'=>$this->rate_count,
             'brand' => new BrandResource($this->whenLoaded('brand')),

@@ -62,4 +62,5 @@ trait UserRelationTrait
             'promo_code_id'
         )->withTimestamps()->withPivot('id');
     }
+
 }

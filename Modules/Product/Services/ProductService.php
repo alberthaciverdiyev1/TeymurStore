@@ -4,6 +4,7 @@ namespace Modules\Product\Services;
 
 use App\Enums\Gender;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 use Modules\Product\Http\Entities\Product;
 use Modules\Product\Http\Entities\ProductImage;
 use Modules\Product\Http\Resources\ProductResource;
@@ -82,12 +83,14 @@ class ProductService
 
         $data->getCollection()->transform(function ($product) {
             $product->rate = ($product->reviews_avg_rate !== null) ? round($product->reviews_avg_rate, 2) : 0;
-
             $product->rate_count = $product->reviews_count;
+
+            $product->is_favorite = Auth::check() ? $product->favoritedBy()->where('user_id', Auth::id())->exists() : false;
+
             return $product;
         });
 
-        return response()->json(isset($params['is_application']) ? ProductResource::collection($data) :[
+        return response()->json(isset($params['is_application']) ? ProductResource::collection($data) : [
             'success' => 200,
             'message' => __('Products retrieved successfully.'),
             'data' => ProductResource::collection($data),
@@ -115,22 +118,23 @@ class ProductService
 
             $averageRate = $product->reviews()->avg('rate') ?? 5;
 
+            $isFavorite = false;
+            if (Auth::check()) {
+                $isFavorite = $product->favoritedBy()
+                    ->where('user_id', Auth::id())
+                    ->exists();
+            }
+
             $data = ProductResource::make($product);
             $data->rate = round($averageRate, 2);
+            $data->rate_count = count($product->reviews);
 
+            $data->is_favorite = $isFavorite;
 
-            return response()->json(isset($params['is_application']) ? $data : [
-                'success' => 200,
-                'message' => __('Product details retrieved successfully.'),
-                'data' => $data,
-            ]);
+            return responseHelper('Product details retrieved successfully.', 200, $data);
 
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json([
-                'success' => 404,
-                'message' => __('Product not found.'),
-                'data' => [],
-            ]);
+            return responseHelper('Product not found.', 404, []);
         }
     }
 
@@ -225,6 +229,7 @@ class ProductService
 
         return $product;
     }
+
     /**
      * Update product
      */
@@ -301,7 +306,7 @@ class ProductService
         $withRelations = ['images', 'brand'];
 
         $statistics = [
-            'total_products'      => $this->model->count(),
+            'total_products' => $this->model->count(),
             'discounted_products' => $this->model->whereNotNull('discount')->count(),
 
             'most_viewed_products' => ProductResource::collection(
@@ -323,10 +328,10 @@ class ProductService
         ];
 
         return response()->json([
-            'success'     => true,
+            'success' => true,
             'status_code' => 200,
-            'message'     => __('Statistics retrieved successfully.'),
-            'data'        => $statistics,
+            'message' => __('Statistics retrieved successfully.'),
+            'data' => $statistics,
         ]);
     }
 

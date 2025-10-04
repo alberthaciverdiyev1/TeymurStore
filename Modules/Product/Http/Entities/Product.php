@@ -76,4 +76,9 @@ class Product extends Model
     {
         return $this->hasMany(Review::class);
     }
+    public function favoritedBy(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'user_favorites', 'product_id', 'user_id');
+    }
+
 }
