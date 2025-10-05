@@ -31,11 +31,8 @@ class CategoryService
         $query = filterLike($query, ['name', 'description'], $params);
         $data = $query->orderBy('id', 'desc')->get();
 
-        return response()->json([
-            'success' => 200,
-            'message' => __('Categories retrieved successfully.'),
-            'data' => CategoryResource::collection($data),
-        ]);
+        return responseHelper('Categories retrieved successfully.',200, CategoryResource::collection($data));
+
     }
 
     /**
@@ -47,18 +44,10 @@ class CategoryService
         try {
             $category = $this->model->with('children')->findOrFail($id);
 
-            return response()->json([
-                'success' => 200,
-                'message' => __('Category details retrieved successfully.'),
-                'data' => CategoryResource::make($category),
-            ]);
+            return responseHelper('Category details retrieved successfully.',200, CategoryResource::make($category));
 
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json([
-                'success' => 404,
-                'message' => __('Category not found.'),
-                'data' => [],
-            ]);
+            return responseHelper('Category not found.',404, []);
         }
     }
 

@@ -22,11 +22,7 @@ class BasketService implements ICrudInterface
         $id = auth()->id();
         $data = $this->model->with('product')->where('user_id', $id)->get();
 
-        return response()->json([
-            'success' => 200,
-            'message' => __('Basket data retrieved successfully.'),
-            'data' => BasketResource::collection($data),
-        ]);
+        return responseHelper('Basket retrieved successfully.', 200, BasketResource::collection($data));
     }
 
     public function details(int $id): JsonResponse
@@ -64,10 +60,7 @@ class BasketService implements ICrudInterface
                 BasketResource::class
             );
         } catch (ModelNotFoundException $e) {
-            return response()->json([
-                'success' => 404,
-                'message' => __('Basket not found.'),
-            ], 404);
+            return responseHelper('Basket not found.', 404, []);
         }
     }
 
@@ -83,10 +76,7 @@ class BasketService implements ICrudInterface
                 'Basket deleted successfully.'
             );
         } catch (ModelNotFoundException $e) {
-            return response()->json([
-                'success' => 404,
-                'message' => __('Basket not found.'),
-            ], 404);
+            return responseHelper('Basket not found.', 404, []);
         }
     }
 }

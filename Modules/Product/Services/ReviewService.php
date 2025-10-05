@@ -28,17 +28,19 @@ class ReviewService
             ->orderBy('id', 'desc')
             ->paginate(20);
 
-        return response()->json([
-            'success' => 200,
-            'message' => __('Reviews retrieved successfully.'),
-            'data' => ReviewResource::collection($data),
-            'meta' => [
-                'current_page' => $data->currentPage(),
-                'last_page' => $data->lastPage(),
-                'per_page' => $data->perPage(),
-                'total' => $data->total(),
-            ],
-        ]);
+        return responseHelper('Reviews retrieved successfully.', 200, ReviewResource::collection($data));
+
+//        return response()->json([
+//            'success' => 200,
+//            'message' => __('Reviews retrieved successfully.'),
+//            'data' => ReviewResource::collection($data),
+//            'meta' => [
+//                'current_page' => $data->currentPage(),
+//                'last_page' => $data->lastPage(),
+//                'per_page' => $data->perPage(),
+//                'total' => $data->total(),
+//            ],
+//        ]);
     }
 
     /**

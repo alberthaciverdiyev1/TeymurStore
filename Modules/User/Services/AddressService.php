@@ -5,6 +5,7 @@ namespace Modules\User\Services;
 use App\Interfaces\ICrudInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
+use Modules\Product\Http\Resources\ReviewResource;
 use Modules\User\Http\Entities\Address;
 use Modules\User\Http\Resources\AddressResource;
 
@@ -22,11 +23,8 @@ class AddressService implements ICrudInterface
         $id = auth()->id();
         $data = $this->model->where('user_id', $id)->get();
 
-        return response()->json([
-            'success' => 200,
-            'message' => __('Addresses retrieved successfully.'),
-            'data' => AddressResource::collection($data),
-        ]);
+        return responseHelper('Addresses retrieved successfully.', 200, AddressResource::collection($data));
+
     }
 
     public function details(int $id): JsonResponse
@@ -36,16 +34,10 @@ class AddressService implements ICrudInterface
                 ->where('user_id', auth()->id())
                 ->findOrFail($id);
 
-            return response()->json([
-                'success' => 200,
-                'message' => __('Address retrieved successfully.'),
-                'data' => new AddressResource($address),
-            ]);
+            return responseHelper('Address retrieved successfully.', 200, new AddressResource($address));
+
         } catch (ModelNotFoundException $e) {
-            return response()->json([
-                'success' => 404,
-                'message' => __('Address not found.'),
-            ], 404);
+            return responseHelper('Address not found.', 404,[]);
         }
     }
 
@@ -91,10 +83,7 @@ class AddressService implements ICrudInterface
             }, 'Address updated successfully.', AddressResource::class);
 
         } catch (ModelNotFoundException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => __('Address not found.'),
-            ], 404);
+            return responseHelper('Address not found.', 404,[]);
         }
     }
 
@@ -110,10 +99,7 @@ class AddressService implements ICrudInterface
                 'Address deleted successfully.'
             );
         } catch (ModelNotFoundException $e) {
-            return response()->json([
-                'success' => 404,
-                'message' => __('Address not found.'),
-            ], 404);
+            return responseHelper('Address not found.', 404,[]);
         }
     }
 }

@@ -42,17 +42,19 @@ class SizeService
             return $query->orderBy('sort_order', 'asc')->paginate(20);
         });
 
-        return response()->json([
-            'success' => 200,
-            'message' => __('Sizes retrieved successfully.'),
-            'data' => SizeResource::collection($data),
-            'meta' => [
-                'current_page' => $data->currentPage(),
-                'last_page' => $data->lastPage(),
-                'per_page' => $data->perPage(),
-                'total' => $data->total(),
-            ],
-        ]);
+        return responseHelper('Sizes retrieved successfully.', 200, SizeResource::collection($data));
+
+//        return response()->json([
+//            'success' => 200,
+//            'message' => __('Sizes retrieved successfully.'),
+//            'data' => SizeResource::collection($data),
+//            'meta' => [
+//                'current_page' => $data->currentPage(),
+//                'last_page' => $data->lastPage(),
+//                'per_page' => $data->perPage(),
+//                'total' => $data->total(),
+//            ],
+//        ]);
     }
 
     /**
@@ -63,18 +65,16 @@ class SizeService
         try {
             $color = $this->model->findOrFail($id);
 
-            return response()->json([
-                'success' => 200,
-                'message' => __('Size details retrieved successfully.'),
-                'data' => SizeResource::make($color),
-            ]);
+            return responseHelper('Size details retrieved successfully.', 200, SizeResource::make($color));
+
+//            return response()->json([
+//                'success' => 200,
+//                'message' => __('Size details retrieved successfully.'),
+//                'data' => SizeResource::make($color),
+//            ]);
 
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json([
-                'success' => 404,
-                'message' => __('Size not found.'),
-                'data' => [],
-            ]);
+            return responseHelper('Size not found.', 200, []);
         }
     }
 

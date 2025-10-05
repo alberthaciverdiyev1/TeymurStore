@@ -42,17 +42,19 @@ class BrandService
             return $query->orderBy('created_at', 'desc')->paginate(20);
         });
 
-        return response()->json([
-            'success' => 200,
-            'message' => __('Brands retrieved successfully.'),
-            'data' => BrandResource::collection($data),
-            'meta' => [
-                'current_page' => $data->currentPage(),
-                'last_page' => $data->lastPage(),
-                'per_page' => $data->perPage(),
-                'total' => $data->total(),
-            ],
-        ]);
+        return responseHelper('Brands retrieved successfully.',200, BrandResource::collection($data));
+
+//        return response()->json([
+//            'success' => 200,
+//            'message' => __('Brands retrieved successfully.'),
+//            'data' => BrandResource::collection($data),
+//            'meta' => [
+//                'current_page' => $data->currentPage(),
+//                'last_page' => $data->lastPage(),
+//                'per_page' => $data->perPage(),
+//                'total' => $data->total(),
+//            ],
+//        ]);
     }
 
     /**
@@ -62,19 +64,10 @@ class BrandService
     {
         try {
             $brand = $this->model->findOrFail($id);
-
-            return response()->json([
-                'success' => 200,
-                'message' => __('Brand details retrieved successfully.'),
-                'data' => BrandResource::make($brand),
-            ]);
+            return responseHelper('Brand details retrieved successfully.',200, BrandResource::make($brand));
 
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json([
-                'success' => 404,
-                'message' => __('Brand not found.'),
-                'data' => [],
-            ]);
+            return responseHelper('Brand not found.',404, []);
         }
     }
 

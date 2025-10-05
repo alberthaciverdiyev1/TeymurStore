@@ -38,17 +38,19 @@ class DeliveryService
             return $query->orderBy('price', 'asc')->paginate(20);
         });
 
-        return response()->json([
-            'success' => 200,
-            'message' => __('Deliverys retrieved successfully.'),
-            'data' => DeliveryResource::collection($data),
-            'meta' => [
-                'current_page' => $data->currentPage(),
-                'last_page' => $data->lastPage(),
-                'per_page' => $data->perPage(),
-                'total' => $data->total(),
-            ],
-        ]);
+        return responseHelper('Deliveries retrieved successfully.', 200, DeliveryResource::collection($data));
+
+//        return response()->json([
+//            'success' => 200,
+//            'message' => __('Deliverys retrieved successfully.'),
+//            'data' => DeliveryResource::collection($data),
+//            'meta' => [
+//                'current_page' => $data->currentPage(),
+//                'last_page' => $data->lastPage(),
+//                'per_page' => $data->perPage(),
+//                'total' => $data->total(),
+//            ],
+//        ]);
     }
 
     /**

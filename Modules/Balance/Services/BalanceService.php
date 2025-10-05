@@ -96,10 +96,6 @@ class BalanceService
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return response()->json([
-            'success' => 200,
-            'message' => 'Balance history retrieved successfully.',
-            'data' => BalanceResource::collection($history),
-        ]);
+        return responseHelper('Balance history retrieved successfully.',200,BalanceResource::collection($history));
     }
 }

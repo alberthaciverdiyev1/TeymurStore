@@ -27,17 +27,19 @@ class FavoriteService
             ->orderBy('user_favorites.created_at', 'desc')
             ->paginate(20);
 
-        return response()->json([
-            'success' => 200,
-            'message' => __('Favorites retrieved successfully.'),
-            'data' => $favorites->items(),
-            'meta' => [
-                'current_page' => $favorites->currentPage(),
-                'last_page' => $favorites->lastPage(),
-                'per_page' => $favorites->perPage(),
-                'total' => $favorites->total(),
-            ],
-        ]);
+        return responseHelper('Favorites retrieved successfully.', 200, $favorites->items());
+
+//        return response()->json([
+//            'success' => 200,
+//            'message' => __('Favorites retrieved successfully.'),
+//            'data' => $favorites->items(),
+//            'meta' => [
+//                'current_page' => $favorites->currentPage(),
+//                'last_page' => $favorites->lastPage(),
+//                'per_page' => $favorites->perPage(),
+//                'total' => $favorites->total(),
+//            ],
+//        ]);
     }
 
     /**

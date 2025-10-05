@@ -42,17 +42,19 @@ class ColorService
             return $query->orderBy('sort_order', 'asc')->paginate(20);
         });
 
-        return response()->json([
-            'success' => 200,
-            'message' => __('Colors retrieved successfully.'),
-            'data' => ColorResource::collection($data),
-            'meta' => [
-                'current_page' => $data->currentPage(),
-                'last_page' => $data->lastPage(),
-                'per_page' => $data->perPage(),
-                'total' => $data->total(),
-            ],
-        ]);
+        return responseHelper('Colors retrieved successfully.', 200, ColorResource::collection($data));
+
+//        return response()->json([
+//            'success' => 200,
+//            'message' => __('Colors retrieved successfully.'),
+//            'data' => ColorResource::collection($data),
+//            'meta' => [
+//                'current_page' => $data->currentPage(),
+//                'last_page' => $data->lastPage(),
+//                'per_page' => $data->perPage(),
+//                'total' => $data->total(),
+//            ],
+//        ]);
     }
 
     /**
@@ -63,18 +65,10 @@ class ColorService
         try {
             $color = $this->model->findOrFail($id);
 
-            return response()->json([
-                'success' => 200,
-                'message' => __('Color details retrieved successfully.'),
-                'data' => ColorResource::make($color),
-            ]);
+            return responseHelper('Colors retrieved successfully.', 200, ColorResource::make($color));
 
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json([
-                'success' => 404,
-                'message' => __('Color not found.'),
-                'data' => [],
-            ]);
+            return responseHelper('Colors not found.', 404, []);
         }
     }
 
