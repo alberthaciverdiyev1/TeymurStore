@@ -5,6 +5,7 @@ namespace Modules\User\Services;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Modules\Product\Http\Entities\Product;
+use Modules\Product\Http\Resources\ProductResource;
 
 class FavoriteService
 {
@@ -24,22 +25,19 @@ class FavoriteService
 
         $favorites = $user->favorites()
             ->with(['brand', 'category', 'images'])
+            ->withAvg('reviews', 'rate')
+            ->withCount('reviews')
             ->orderBy('user_favorites.created_at', 'desc')
             ->paginate(20);
 
-        return responseHelper('Favorites retrieved successfully.', 200, $favorites->items());
+        $favorites->getCollection()->transform(function ($product) {
+            $product->is_favorite = true;
+            $product->rate = ($product->reviews_avg_rate !== null) ? round($product->reviews_avg_rate, 2) : 0;
+            $product->rate_count = $product->reviews_count;
+            return $product;
+        });
 
-//        return response()->json([
-//            'success' => 200,
-//            'message' => __('Favorites retrieved successfully.'),
-//            'data' => $favorites->items(),
-//            'meta' => [
-//                'current_page' => $favorites->currentPage(),
-//                'last_page' => $favorites->lastPage(),
-//                'per_page' => $favorites->perPage(),
-//                'total' => $favorites->total(),
-//            ],
-//        ]);
+        return responseHelper('Favorites retrieved successfully.', 200, ProductResource::collection($favorites->items()));
     }
 
     /**
