@@ -4,6 +4,7 @@ namespace Modules\Order\Services;
 
 use App\Enums\BalanceType;
 use App\Interfaces\ICrudInterface;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -157,8 +158,7 @@ class OrderService
             );
 
             $content = $data->getData(true);
-
-            if ($content['success'] === 201) {
+            if ($content['success']) {
                 $orderId = (int)$content['data']['id'];
 
                 handleTransaction(
@@ -364,4 +364,104 @@ class OrderService
             ], 404);
         }
     }
+    public function getReceipt(int $orderId): JsonResponse
+    {
+        try {
+            $order = Order::with(['items.product', 'address'])
+                ->where('id', $orderId)
+                ->where('user_id', auth()->id())
+                ->first();
+
+            if (!$order) {
+                return responseHelper('Order not found.', 404);
+            }
+
+            $orderSummary = [
+                'order_id'       => $order->id,
+                'transaction_id'       => $order->transaction_id,
+                'order_time'     => $order->created_at->format('Y-m-d H:i:s'),
+                'items_totals'   => $order->items->sum(fn($item) => $item->total_price),
+                'items_discounts'=> $order->discount_price ?? 0,
+                'shipping'       => $order->shipping_price ?? 0,
+                'total'          => ($order->total_price + ($order->shipping_price ?? 0)) - ($order->discount_price ?? 0),
+            ];
+
+            $pickup = [
+                'city'      => $order->address->city ?? null,
+                'town'      => $order->address->town_village_district ?? null,
+                'street'    => $order->address->street_building_number ?? null,
+                'apartment' => $order->address->unit_floor_apartment ?? null,
+                'phone'     => $order->address->contact_number ?? auth()->user()->phone,
+            ];
+            return responseHelper('Order receipt generated successfully.', 200, [
+                'order_summary' => $orderSummary,
+                'pickup'        => $pickup,
+            ]);
+
+        } catch (\Throwable $e) {
+            \Log::error('Order receipt failed', [
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage(),
+            ]);
+
+            return responseHelper('Something went wrong while generating the receipt.', 500);
+        }
+    }
+
+    public function downloadReceipt(int $orderId)
+    {
+        try {
+            $user = auth()->user();
+
+            $order = Order::with(['items.product', 'address'])
+                ->where('id', $orderId)
+                ->where('user_id', $user->id)
+                ->first();
+
+            if (!$order) {
+                return responseHelper('Order not found.', 404);
+            }
+
+            $orderSummary = [
+                'order_id'        => $order->id,
+                'transaction_id'  => $order->transaction_id,
+                'order_time'      => $order->created_at->format('Y-m-d H:i:s'),
+                'items_totals'    => $order->items->sum(fn($item) => $item->total_price),
+                'items_discounts' => $order->discount_price ?? 0,
+                'shipping'        => $order->shipping_price ?? 0,
+                'total'           => ($order->total_price + ($order->shipping_price ?? 0)) - ($order->discount_price ?? 0),
+            ];
+
+            $pickup = [
+                'city'      => $order->address->city ?? null,
+                'town'      => $order->address->town_village_district ?? null,
+                'street'    => $order->address->street_building_number ?? null,
+                'apartment' => $order->address->unit_floor_apartment ?? null,
+                'phone'     => $order->address->contact_number ?? $user->phone,
+            ];
+
+            foreach ($order->items as $item) {
+                $item->product_title = mb_convert_encoding(
+                    $item->product->getTranslation('title', app()->getLocale()),
+                    'UTF-8', 'UTF-8'
+                );
+            }
+            $htmlContent = receiptPdf($order, $pickup, $orderSummary);
+
+            $pdf = Pdf::loadHTML($htmlContent);
+            $filename = "receipt_order_{$order->transaction_id}.pdf";
+
+            return $pdf->download($filename);
+
+        } catch (\Throwable $e) {
+            \Log::error('Receipt PDF generation failed', [
+                'user_id' => $user->id ?? null,
+                'error'   => $e->getMessage(),
+                'trace'   => $e->getTraceAsString(),
+            ]);
+
+            return responseHelper('Something went wrong while generating the receipt PDF.', 500);
+        }
+    }
+
 }

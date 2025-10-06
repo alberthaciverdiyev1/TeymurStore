@@ -60,4 +60,12 @@ class OrderController extends Controller
     {
         return $this->service->delete($id);
     }
+    public function getReceipt(int $orderId): JsonResponse
+    {
+        return $this->service->getReceipt($orderId);
+    }
+    public function downloadReceipt(int $orderId)
+    {
+        return $this->service->downloadReceipt($orderId);
+    }
 }

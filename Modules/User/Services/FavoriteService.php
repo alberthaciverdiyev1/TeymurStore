@@ -24,7 +24,7 @@ class FavoriteService
         $user = Auth::user();
 
         $favorites = $user->favorites()
-            ->with(['brand', 'category', 'images'])
+            ->with(['brand', 'category', 'images','colors','sizes'])
             ->withAvg('reviews', 'rate')
             ->withCount('reviews')
             ->orderBy('user_favorites.created_at', 'desc')

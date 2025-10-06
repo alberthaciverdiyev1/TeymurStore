@@ -23,5 +23,7 @@ Route::prefix('order')->controller(\Modules\Order\Http\Controllers\OrderControll
         Route::get('/{id}', 'details')->name('order.details');
         Route::put('/{id}', 'update')->name('order.update');
         Route::delete('/{id}', 'delete')->name('order.delete');
+        Route::get('/receipt/{order_id}', 'getReceipt')->name('order.getReceipt');
+        Route::get('/download-receipt/{order_id}', 'downloadReceipt')->name('order.downloadReceipt');
     });
 });
