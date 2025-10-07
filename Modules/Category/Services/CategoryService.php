@@ -34,6 +34,31 @@ class CategoryService
         return responseHelper('Categories retrieved successfully.',200, CategoryResource::collection($data));
 
     }
+    public function listWithProducts($request): JsonResponse
+    {
+        $params = $request->all();
+
+        $query = $this->model
+            ->with([
+                'products' => function ($q) {
+                    $q->orderByDesc('sales_count')->limit(10);
+                },
+                'children.products' => function ($q) {
+                    $q->orderByDesc('sales_count')->limit(10);
+                }
+            ]);
+
+        $query = filterLike($query, ['name', 'description'], $params);
+
+        $data = $query->orderBy('id', 'desc')->get();
+
+        return responseHelper(
+            'Categories retrieved successfully.',
+            200,
+            CategoryResource::collection($data)
+        );
+    }
+
 
     /**
      * @param int $id

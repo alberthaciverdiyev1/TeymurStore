@@ -37,6 +37,10 @@ class CategoryController extends Controller
     {
         return $this->service->list($request);
     }
+    public function listWithProducts(Request $request)
+    {
+        return $this->service->listWithProducts($request);
+    }
 
     /**
      * Store a newly created resource in storage.

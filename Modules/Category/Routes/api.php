@@ -15,9 +15,10 @@ use Illuminate\Http\Request;
 
 
 Route::prefix('category')->controller(\Modules\Category\Http\Controllers\CategoryController::class)->group(function () {
-    Route::get('/', 'list')->name('category.list');
 
     Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/with-products', 'listWithProducts')->name('category.listWithProducts');
+        Route::get('/', 'list')->name('category.list');
         Route::post('/', 'add')->name('category.add');
         Route::get('/{id}', 'details')->name('category.details');
         Route::put('/{id}', 'update')->name('category.update');

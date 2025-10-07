@@ -3,6 +3,7 @@
 namespace Modules\Category\Http\Transformers;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use Modules\Product\Http\Resources\ProductResource;
 
 class CategoryResource extends JsonResource
 {
@@ -17,6 +18,7 @@ class CategoryResource extends JsonResource
             'is_active' => $this->is_active,
             'sort_order' => $this->sort_order,
             'children' => self::collection($this->whenLoaded('children')),
+            'products' => ProductResource::collection($this->whenLoaded('products')),
         ];
     }
 }

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Category\Database\Factories\CategoryFactory;
+use Modules\Product\Http\Entities\Product;
 
 class Category extends Model
 {
@@ -38,6 +39,10 @@ class Category extends Model
         return $this->hasMany(__CLASS__, 'parent_id');
     }
 
+    public function products()
+    {
+        return $this->hasMany(Product::class, 'category_id');
+}
     public static function newFactory(): CategoryFactory{
         return CategoryFactory::new();
     }
