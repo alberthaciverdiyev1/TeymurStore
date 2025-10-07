@@ -12,7 +12,15 @@ class CategoryDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // $this->call([]);
-        Category::factory()->count(200)->create();
+        $parentCategories = Category::factory()->count(50)->create([
+            'parent_id' => null
+        ]);
+
+        foreach ($parentCategories as $parent) {
+            $numChildren = rand(1, 5);
+            Category::factory()->count($numChildren)->create([
+                'parent_id' => $parent->id
+            ]);
+        }
     }
 }

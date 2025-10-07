@@ -46,11 +46,13 @@ class CategoryService
                 'children.products' => function ($q) {
                     $q->orderByDesc('sales_count')->limit(10);
                 }
-            ]);
+            ])
+            ->withCount('children')
+            ->orderByDesc('children_count');
 
         $query = filterLike($query, ['name', 'description'], $params);
 
-        $data = $query->orderBy('id', 'desc')->get();
+        $data = $query->get();
 
         return responseHelper(
             'Categories retrieved successfully.',
