@@ -22,3 +22,6 @@ Route::controller(SendNotificationController::class)->middleware('auth:sanctum')
 Route::controller(\Modules\Notification\Http\Controllers\NotificationTokenController::class)->middleware('auth:sanctum')->prefix('notification')->group(function () {
     Route::post('/save-token', 'saveToken')->name('notification.save-token');
 });
+Route::controller(\Modules\Notification\Http\Controllers\NotificationController::class)->middleware('auth:sanctum')->prefix('notification')->group(function () {
+    Route::get('/', 'getAll')->name('notification.list');
+});

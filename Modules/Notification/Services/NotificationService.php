@@ -67,7 +67,7 @@ class NotificationService
     /**
      * Notification list
      */
-    public function list($request)
+    public function listAdmin($request)
     {
         $filters = $request->all();
         $query = $this->model->query();
@@ -90,6 +90,30 @@ class NotificationService
 
         $notifications = $query->orderBy('created_at', 'desc')->paginate(20);
 
+        return responseHelper('Notifications retrieved successfully.', 200, NotificationResource::collection($notifications));
+        return response()->json([
+            'success' => 200,
+            'message' => __('Notifications retrieved successfully.'),
+            'data' => NotificationResource::collection($notifications),
+            'meta' => [
+                'current_page' => $notifications->currentPage(),
+                'last_page' => $notifications->lastPage(),
+                'per_page' => $notifications->perPage(),
+                'total' => $notifications->total(),
+            ],
+        ]);
+    }
+
+    public function list($request)
+    {
+        $filters = $request->all();
+        $query = $this->model->query();
+        $query->where('user_id', auth()->id())->orWhere('all', true);
+
+
+        $notifications = $query->orderBy('created_at', 'desc')->paginate(20);
+
+        return responseHelper('Notifications retrieved successfully.', 200, NotificationResource::collection($notifications));
         return response()->json([
             'success' => 200,
             'message' => __('Notifications retrieved successfully.'),

@@ -6,6 +6,7 @@ use App\Models\User;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Modules\Banner\Database\Seeders\BannerDatabaseSeeder;
 use Modules\Brand\Database\Seeders\BrandDatabaseSeeder;
 use Modules\Category\Database\Seeders\CategoryDatabaseSeeder;
 use Modules\Color\Database\Seeders\ColorDatabaseSeeder;
@@ -37,6 +38,7 @@ class DatabaseSeeder extends Seeder
             NotificationDatabaseSeeder::class,
             DeliveryDatabaseSeeder::class,
             HelpAndPolicyDatabaseSeeder::class,
+            BannerDatabaseSeeder::class
         //    PromoCodeDatabaseSeeder::class,
         ]);
     }

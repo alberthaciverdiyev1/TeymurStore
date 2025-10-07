@@ -11,5 +11,6 @@
     "Delivery": true,
     "Balance": true,
     "HelpAndPolicy": true,
-    "PromoCode": true
+    "PromoCode": true,
+    "Banner": true
 }
