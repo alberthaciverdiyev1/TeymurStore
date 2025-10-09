@@ -17,7 +17,8 @@ use Illuminate\Http\Request;
 Route::prefix('order')->controller(\Modules\Order\Http\Controllers\OrderController::class)->group(function () {
 
     Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/', 'getAll')->name('order.list');
+        Route::get('/', 'getAll')->name('order.list');
+        Route::get('/list-admin', 'getAllAdmin')->name('order.adminList');
         Route::post('/', 'orderFromBasket')->name('order.orderFromBasket');
         Route::post('/{product_id}', 'buyOne')->name('order.buyOne');
         Route::get('/{id}', 'details')->name('order.details');

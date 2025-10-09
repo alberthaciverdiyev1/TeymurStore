@@ -55,6 +55,21 @@ class OrderService
         );
     }
 
+    public function getAllAdmin(Request $request): JsonResponse
+    {
+
+        $orders = $this->model
+            ->with(['items', 'latestStatus', 'address', 'user'])
+            ->latest()
+            ->get();
+
+        return responseHelper(
+            __('Order data retrieved successfully.'),
+            200,
+            OrderResource::collection($orders)
+        );
+    }
+
     public function details(int $id): JsonResponse
     {
         try {

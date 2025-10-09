@@ -36,6 +36,11 @@ class OrderController extends Controller
         return $this->service->getAll($request);
     }
 
+    public function getAllAdmin(Request $request): JsonResponse
+    {
+        return $this->service->getAllAdmin($request);
+    }
+
     public function details(int $id): JsonResponse
     {
         return $this->service->details($id);
