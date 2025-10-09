@@ -122,7 +122,6 @@ class OrderService
         }
     }
 
-
     public function orderFromBasket($request): JsonResponse
     {
         $validated = $request->validated();
@@ -256,6 +255,10 @@ class OrderService
     public function buyOne($request, $product_id): JsonResponse
     {
         $validated = $request->validated();
+        $color_id = $request->color_id ?? null;
+        $size_id = $request->size_id ?? null;
+        if ($color_id)unset($validated['color_id']);
+        if ($size_id)unset($validated['size_id']);
         try {
 
             $address = Address::where('user_id', auth()->id())
@@ -278,6 +281,13 @@ class OrderService
 
             $product = Product::findOrFail($product_id);
 
+            if ($color_id) if (!$product->colors()->where('color_id',$color_id)->exists()){
+                return responseHelper('Selected color is not available for this product.', 400);
+            }
+            if ($size_id) if (!$product->sizes()->where('size_id',$size_id)->exists()){
+                return responseHelper('Selected size is not available for this product.', 400);
+            }
+
             if ($product->stock_count < 1) {
                 return responseHelper("Insufficient stock for product: $product->title['az']", 400);
             }
@@ -294,10 +304,22 @@ class OrderService
             $validated['shipping_price'] = $validated['total_price'] < $delivery['free_from'] ? ($delivery['price'] ?? 0) : 0;
 
             if (isset($validated['promo_code']) && $validated['promo_code']) {
-//                $response = $this->promoCodeService->check($validated['promo_code'], true);
-//                \Log::info($response['status_code']);
-                unset($validated['promo_code']);
+                if ($product->discount && $product->discount > 0) {
+                    return responseHelper('Promo codes cannot be applied to already discounted products.', 400);
+                }
+                $response = $this->promoCodeService->check($validated['promo_code'], true);
 
+                if ($response->getData(true)['status_code'] == 200) {
+                   $promoData = $response->getData(true)['data'];
+                   if ($promoData['discount_percent'] && $promoData['discount_percent'] > 0) {
+                       $discountAmount = ( $product->price * $promoData['discount_percent']) / 100;
+                       $validated['total_price'] = round($validated['total_price'] - $discountAmount, 2);
+                    }
+                      $this->promoCodeService->applyPromoCodeToUser($promoData['id'], $validated['user_id'],true);
+                } else {
+                    return responseHelper($response->getData(true)['message'], $response->getData(true)['status_code']);
+                }
+                unset($validated['promo_code']);
             }
 
             if (isset($validated['pay_with_balance']) && $validated['pay_with_balance']) {
@@ -310,12 +332,12 @@ class OrderService
                 $balanceResponse = $this->balanceService->withdraw(
                     $validated['user_id'],
                     ($validated['total_price'] + $validated['shipping_price']),
-                    'Payment for order with transaction ID: ' . $validated['transaction_id']
+                    "Payment for order with transaction ID: {$validated['transaction_id']}"
                 );
 
                 $balanceContent = $balanceResponse->getData(true);
 
-                if ($balanceContent['success'] !== 201) {
+                if ($balanceContent['success'] && $balanceContent['status_code'] !== 201) {
                     return responseHelper('Failed to process payment from balance. Please try again.', 500);
                 }
                 unset($validated['pay_with_balance']);
@@ -350,6 +372,8 @@ class OrderService
                     fn() => OrderItem::create([
                         'order_id' => $orderId,
                         'product_id' => $product->id,
+                        'color_id' => $color_id,
+                        'size_id' => $size_id,
                         'quantity' => 1,
                         'unit_price' => $price,
                         'total_price' => $price,

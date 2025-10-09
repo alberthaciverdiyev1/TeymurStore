@@ -7,6 +7,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Modules\PromoCode\Http\Entities\PromoCode;
 use Modules\PromoCode\Http\Resources\PromoCodeResource;
+use Modules\User\Http\Entities\User;
 
 class PromoCodeService
 {
@@ -70,7 +71,7 @@ class PromoCodeService
         }
     }
 
-    public function check(string $code, $inline_request = false): JsonResponse
+    public function check(string $code, $inline_request = false)
     {
         try {
             $user = auth()->user();
@@ -159,4 +160,31 @@ class PromoCodeService
 
         return $response;
     }
+
+    public function applyPromoCodeToUser(int $promoCodeId, int $userId, bool $inline_request = false): bool
+    {
+        try {
+            $promoCode = $this->model->findOrFail($promoCodeId);
+
+            if ($promoCode->user_count > 0) {
+                $promoCode->decrement('user_count');
+            } else {
+                return false;
+            }
+
+            $user = User::findOrFail($userId);
+
+            if (!$user->usedPromoCodes()->where('promo_code_id', $promoCodeId)->exists()) {
+                $user->usedPromoCodes()->attach($promoCodeId);
+            } else {
+                return false;
+            }
+
+            return true;
+        } catch (\Exception $e) {
+            \Log::error("Failed to apply promo code {$promoCodeId} to user {$userId}: ".$e->getMessage());
+            return false;
+        }
+    }
+
 }

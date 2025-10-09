@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 if (!function_exists('handleTransaction')) {
-    function handleTransaction(callable $callback, string $successMessage = '', $resource = null, int $statusCode = 200, bool $x = false)
+    function handleTransaction(callable $callback, string $successMessage = '', $resource = null, int $statusCode = 200, bool $inline_request = false)
     {
         $is_application = (bool) request()->query('is_application', false);
         \Log::info('Transaction is_application: ' . $is_application);

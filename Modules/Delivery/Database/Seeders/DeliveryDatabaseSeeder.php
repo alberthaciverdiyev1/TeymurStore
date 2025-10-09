@@ -12,7 +12,7 @@ class DeliveryDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        Delivery::factory()->count(20)->create();
+        Delivery::factory()->count(50)->create();
         // $this->call([]);
     }
 }

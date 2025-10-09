@@ -4,7 +4,7 @@ namespace Modules\Order\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class OrderAddRequest extends FormRequest
+class OrderBuyOneAddRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -24,6 +24,8 @@ class OrderAddRequest extends FormRequest
             'note' => ['nullable', 'string'],
             'pay_with_balance' => ['nullable', 'boolean'],
             'promo_code' => ['nullable', 'string'],
+            'size_id' => ['nullable', 'integer', 'exists:sizes,id'],
+            'color_id' => ['nullable', 'integer', 'exists:colors,id'],
         ];
     }
 }

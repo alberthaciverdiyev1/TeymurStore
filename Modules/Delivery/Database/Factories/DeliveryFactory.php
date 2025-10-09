@@ -10,12 +10,12 @@ class DeliveryFactory extends Factory
 {
     protected $model = Delivery::class;
 
-    public function definition()
+    public function definition(): array
     {
-        $city = $this->faker->randomElement(City::cases());
+        $cities = array_map(fn($c) => $c->value, City::cases());
 
         return [
-            'city_name'     => $city->value,
+            'city_name'     => $this->faker->unique()->randomElement($cities),
             'price'         => $this->faker->randomFloat(2, 2, 50),
             'free_from'     => $this->faker->randomElement([0, 30, 50, 100]),
             'delivery_time' => $this->faker->randomElement(['1-2 gün', '2-3 gün', '3-5 gün']),

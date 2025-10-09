@@ -59,7 +59,8 @@ class BalanceService
                 'note' => $note,
             ])->refresh(),
             'Balance withdrawn successfully.',
-            BalanceResource::class
+            BalanceResource::class,
+            201
         );
     }
 

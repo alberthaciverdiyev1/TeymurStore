@@ -18,7 +18,7 @@ Route::controller(BalanceController::class)
     ->middleware('auth:sanctum')
     ->prefix('balance')
     ->group(function () {
-      //  Route::post('/deposit', 'deposit')->name('balance.deposit');
+        Route::post('/deposit', 'deposit')->name('balance.deposit');
        // Route::post('/withdraw', 'withdraw')->name('balance.withdraw');
        // Route::get('/total', 'balance')->name('balance.total');
         Route::get('/history', 'getBalanceHistory')->name('balance.history');

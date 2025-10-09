@@ -7,6 +7,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Modules\Order\Http\Requests\OrderAddRequest;
+use Modules\Order\Http\Requests\OrderBuyOneAddRequest;
 use Modules\Order\Http\Requests\OrderUpdateRequest;
 use Modules\Order\Services\OrderService;
 use Modules\User\Http\Requests\Address\AddressAddRequest;
@@ -51,7 +52,7 @@ class OrderController extends Controller
         return $this->service->orderFromBasket($request);
     }
 
-    public function buyOne(OrderAddRequest $request, $product_id): JsonResponse
+    public function buyOne(OrderBuyOneAddRequest $request, $product_id): JsonResponse
     {
         return $this->service->buyOne($request, $product_id);
     }
