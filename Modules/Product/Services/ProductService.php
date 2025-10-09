@@ -218,7 +218,7 @@ class ProductService
             if (!empty($images_arr) && is_array($images_arr)) {
                 $images = [];
                 foreach ($images_arr as $image) {
-                    $url = compressAndUploadImage($image, 'products');
+                    $url = compressAndUploadImage($image, 'products','product');
                     $relativePath = str_replace(url('/'), '', $url);
 
                     $images[] = ['image_path' => ltrim($relativePath, '/')];
@@ -282,7 +282,7 @@ class ProductService
             if (!empty($images_arr) && is_array($images_arr)) {
                 $images = [];
                 foreach ($images_arr as $image) {
-                    $path = compressAndUploadImage($image,'products'); // URL döner
+                    $path = compressAndUploadImage($image, 'products','product');
 
                     $relativePath = str_replace(url('/'), '', $path);
 
