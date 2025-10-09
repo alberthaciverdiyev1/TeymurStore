@@ -3,6 +3,7 @@
 namespace Modules\Category\Services;
 
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Modules\Category\Http\Entities\Category;
 use Modules\Category\Http\Transformers\CategoryResource;
@@ -34,6 +35,32 @@ class CategoryService
         return responseHelper('Categories retrieved successfully.',200, CategoryResource::collection($data));
 
     }
+//    public function listWithProducts($request): JsonResponse
+//    {
+//        $params = $request->all();
+//
+//        $query = $this->model
+//            ->with([
+//                'products' => function ($q) {
+//                    $q->orderByDesc('sales_count')->limit(10);
+//                },
+//                'children.products' => function ($q) {
+//                    $q->orderByDesc('sales_count')->limit(10);
+//                }
+//            ])
+//            ->withCount('children')
+//            ->orderByDesc('children_count');
+//
+//        $query = filterLike($query, ['name', 'description'], $params);
+//
+//        $data = $query->get();
+//
+//        return responseHelper(
+//            'Categories retrieved successfully.',
+//            200,
+//            CategoryResource::collection($data)
+//        );
+//    }
     public function listWithProducts($request): JsonResponse
     {
         $params = $request->all();
@@ -41,11 +68,13 @@ class CategoryService
         $query = $this->model
             ->with([
                 'products' => function ($q) {
-                    $q->orderByDesc('sales_count')->limit(10);
+                    $q->with(['colors', 'sizes', 'images', 'category', 'brand'])
+                        ->withAvg('reviews', 'rate')
+                        ->withCount('reviews')
+                        ->orderByDesc('sales_count')
+                        ->limit(10);
                 },
-                'children.products' => function ($q) {
-                    $q->orderByDesc('sales_count')->limit(10);
-                }
+                'children'
             ])
             ->withCount('children')
             ->orderByDesc('children_count');
@@ -54,12 +83,24 @@ class CategoryService
 
         $data = $query->get();
 
+        $data->each(function ($category) {
+            $category->products->transform(function ($product) {
+                $product->rate = $product->reviews_avg_rate ? round($product->reviews_avg_rate, 2) : 0;
+                $product->rate_count = $product->reviews_count;
+                $product->is_favorite = Auth::check()
+                    ? $product->favoritedBy()->where('user_id', Auth::id())->exists()
+                    : false;
+                return $product;
+            });
+        });
+
         return responseHelper(
-            'Categories retrieved successfully.',
+            'Categories with products retrieved successfully.',
             200,
             CategoryResource::collection($data)
         );
     }
+
 
 
     /**
