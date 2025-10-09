@@ -12,7 +12,7 @@
         "php": "^8.2",
         "barryvdh/laravel-dompdf": "^3.1",
         "google/apiclient": "^2.18",
-        "intervention/image": "^3.11",
+        "intervention/image": "^2.7",
         "laravel-notification-channels/fcm": "^5.1",
         "laravel/framework": "^12.0",
         "laravel/sanctum": "^4.0",
@@ -42,7 +42,8 @@
             "app/Helpers/TransactionHepler.php",
             "app/Helpers/MailHepler.php",
             "app/Helpers/ResponseHelper.php",
-            "app/Helpers/ReceiptPdfHelper.php"
+            "app/Helpers/ReceiptPdfHelper.php",
+            "app/Helpers/CompressImageHelper.php"
         ]
     },
     "autoload-dev": {

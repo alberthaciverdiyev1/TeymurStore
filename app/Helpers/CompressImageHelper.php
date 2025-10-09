@@ -1,34 +1,39 @@
 <?php
 
-use Intervention\Image\Image;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\File;
+use Intervention\Image\ImageManager;
 
-if (!function_exists('compressAndUploadImage'))
-{
-    function compressAndUploadImage(Request $request): string
+if (!function_exists('compressAndUploadImage')) {
+    function compressAndUploadImage(UploadedFile $file, string $subDir = null): string
     {
-        $request->validate([
-            'image' => 'required|image',
-        ]);
+        \Log::info("Compressing image");
 
-        $image = $request->file('images');
+        $subDir = $subDir ? trim($subDir, '/') : '';
+        $storagePath = $subDir ? "public/{$subDir}" : "public";
 
-        $originalSize = $image->getSize();
+        $extension = $file->getClientOriginalExtension();
+        $filename = time() . '_' . uniqid() . '.' . $extension;
+        $fullPath = $storagePath . '/' . $filename;
 
-        $filename = time() . '.' . $image->getClientOriginalExtension();
-        $path = public_path('uploads/' . $filename);
-
-        if ($originalSize > 0) {
-            $compressedSize = $originalSize * 0.6; // 60%-ə endir
-            Image::make($image)
-                ->encode($image->getClientOriginalExtension(), 60) // keyfiyyət 60%
-                ->save($path);
-        } else {
-            $image->move(public_path('uploads'), $filename);
+        if (!Storage::exists($storagePath)) {
+            Storage::makeDirectory($storagePath, 0755, true);
         }
 
-        return response()->json([
-            'success' => true,
-            'path' => url('uploads/' . $filename)
-        ]);
+        $imageManager = new ImageManager(['driver' => 'gd']);
+        $compressionPercent = 80;
+
+        try {
+            $image = $imageManager->make($file->getRealPath())
+                ->orientate()
+                ->save(storage_path("app/{$fullPath}"), $compressionPercent);
+
+            \Log::info("Image successfully compressed: " . storage_path("app/{$fullPath}"));
+        } catch (\Exception $e) {
+            \Log::error("Image compression failed for {$filename}: " . $e->getMessage());
+            $file->storeAs($storagePath, $filename);
+        }
+
+        return Storage::url($fullPath);
     }
 }

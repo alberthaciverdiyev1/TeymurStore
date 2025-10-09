@@ -8,6 +8,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Modules\Balance\Services\BalanceService;
 use Modules\Delivery\Services\DeliveryService;
@@ -60,7 +61,24 @@ class OrderService
             $order = $this->model
                 ->with([
                     'items' => function ($q) {
-                        $q->with(['product', 'color', 'size']);
+                        $q->with([
+                            'product' => function ($query) {
+                                $query->with([
+                                    'brand',
+                                    'category',
+                                    'images',
+                                    'colors',
+                                    'sizes',
+                                    'reviews' => function ($q) {
+                                        $q->select('id', 'product_id', 'user_id', 'rate', 'comment', 'created_at');
+                                    }
+                                ])
+                                    ->withAvg('reviews', 'rate')
+                                    ->withCount('reviews');
+                            },
+                            'color',
+                            'size'
+                        ]);
                     },
                     'statuses',
                     'address',
@@ -68,12 +86,27 @@ class OrderService
                 ])
                 ->where('user_id', auth()->id())
                 ->findOrFail($id);
-            return responseHelper('Order details retrieved successfully.', 200, new OrderDetailResource($order));
+
+            $order->items->transform(function ($item) {
+                $product = $item->product;
+                if ($product) {
+                    $product->rate = $product->reviews_avg_rate !== null ? round($product->reviews_avg_rate, 2) : 0;
+                    $product->rate_count = $product->reviews_count;
+
+                    $product->is_favorite = Auth::check()
+                        ? $product->favoritedBy()->where('user_id', Auth::id())->exists()
+                        : false;
+                }
+                return $item;
+            });
+
+            return responseHelper('Order details retrieved successfully.', 200, OrderDetailResource::make($order));
 
         } catch (ModelNotFoundException $e) {
             return responseHelper('Order not found.', 404);
         }
     }
+
 
     public function orderFromBasket($request): JsonResponse
     {

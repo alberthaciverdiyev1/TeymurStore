@@ -19,16 +19,56 @@ class BasketService implements ICrudInterface
         $this->model = $model;
     }
 
+//    public function getAll($request): JsonResponse
+//    {
+//        $userId = auth()->id();
+//
+//        $data = $this->model
+//            ->with([
+//                'product' => function ($query) {
+//                    $query->with(['reviews' => function ($q) {
+//                        $q->select('id', 'product_id', 'user_id', 'rate', 'comment', 'created_at');
+//                    }])
+//                        ->withAvg('reviews', 'rate')
+//                        ->withCount('reviews');
+//                }
+//            ])
+//            ->where('user_id', $userId)
+//            ->get()
+//            ->map(function ($basketItem) {
+//                if ($basketItem->product) {
+//                    $product = $basketItem->product;
+//
+//                    $product->rate = $product->reviews_avg_rate !== null ? round($product->reviews_avg_rate, 2) : 0;
+//                    $product->rate_count = $product->reviews_count;
+//
+//                    $product->is_favorite = Auth::check()
+//                        ? $product->favoritedBy()->where('user_id', Auth::id())->exists()
+//                        : false;
+//                }
+//
+//                return $basketItem;
+//            });
+//
+//        return responseHelper('Basket retrieved successfully.', 200, BasketResource::collection($data));
+//    }
     public function getAll($request): JsonResponse
     {
         $userId = auth()->id();
 
-        $data = $this->model
+        $basketItems = $this->model
             ->with([
                 'product' => function ($query) {
-                    $query->with(['reviews' => function ($q) {
-                        $q->select('id', 'product_id', 'user_id', 'rate', 'comment', 'created_at');
-                    }])
+                    $query->with([
+                        'brand',
+                        'category',
+                        'images',
+                        'colors',
+                        'sizes',
+                        'reviews' => function ($q) {
+                            $q->select('id', 'product_id', 'user_id', 'rate', 'comment', 'created_at');
+                        }
+                    ])
                         ->withAvg('reviews', 'rate')
                         ->withCount('reviews');
                 }
@@ -36,9 +76,9 @@ class BasketService implements ICrudInterface
             ->where('user_id', $userId)
             ->get()
             ->map(function ($basketItem) {
-                if ($basketItem->product) {
-                    $product = $basketItem->product;
+                $product = $basketItem->product;
 
+                if ($product) {
                     $product->rate = $product->reviews_avg_rate !== null ? round($product->reviews_avg_rate, 2) : 0;
                     $product->rate_count = $product->reviews_count;
 
@@ -50,7 +90,11 @@ class BasketService implements ICrudInterface
                 return $basketItem;
             });
 
-        return responseHelper('Basket retrieved successfully.', 200, BasketResource::collection($data));
+        return responseHelper(
+            'Basket retrieved successfully.',
+            200,
+            BasketResource::collection($basketItems)
+        );
     }
 
 

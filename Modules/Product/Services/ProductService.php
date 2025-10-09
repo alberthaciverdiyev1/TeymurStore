@@ -218,11 +218,14 @@ class ProductService
             if (!empty($images_arr) && is_array($images_arr)) {
                 $images = [];
                 foreach ($images_arr as $image) {
-                    $path = $image->store('products', 'public');
-                    $images[] = ['image_path' => $path];
+                    $url = compressAndUploadImage($image, 'products');
+                    $relativePath = str_replace(url('/'), '', $url);
+
+                    $images[] = ['image_path' => ltrim($relativePath, '/')];
                 }
                 $product->images()->createMany($images);
             }
+
 
             return $product->refresh();
         }, 'Product added successfully.', ProductResource::class);
@@ -266,16 +269,28 @@ class ProductService
                 $product->sizes()->sync($data['sizes'] ?? []);
             }
 
-            if (!empty($images_arr)) {
-                $product->images()->delete();
-
+//            if (!empty($images_arr)) {
+//                $product->images()->delete();
+//
+//                $images = [];
+//                foreach ($images_arr as $image) {
+//                    $path = $image->store('products', 'public');
+//                    $images[] = ['image_path' => $path];
+//                }
+//                $product->images()->createMany($images);
+//            }
+            if (!empty($images_arr) && is_array($images_arr)) {
                 $images = [];
                 foreach ($images_arr as $image) {
-                    $path = $image->store('products', 'public');
-                    $images[] = ['image_path' => $path];
+                    $path = compressAndUploadImage($image,'products'); // URL döner
+
+                    $relativePath = str_replace(url('/'), '', $path);
+
+                    $images[] = ['image_path' => $relativePath];
                 }
                 $product->images()->createMany($images);
             }
+
 
             return $product->refresh();
         }, 'Product updated successfully.', ProductResource::class);
