@@ -45,4 +45,9 @@ class SettingController extends Controller
         return $this->service->update($request);
     }
 
+    public function changeLocale(Request $request)
+    {
+        return $this->service->changeLocale($request);
+    }
+
 }

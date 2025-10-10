@@ -53,4 +53,15 @@ class SettingService
 
         return $setting;
     }
+
+    public function changeLocale($request)
+    {
+        $request->validate([
+            'locale' => ['required', 'in:az,en,ru,tr'],
+        ]);
+
+        return responseHelper('Locale changed successfully.', 200, [
+            'locale' => $request->locale,
+        ]);
+    }
 }
