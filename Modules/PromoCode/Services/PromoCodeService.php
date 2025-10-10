@@ -161,7 +161,7 @@ class PromoCodeService
         return $response;
     }
 
-    public function applyPromoCodeToUser(int $promoCodeId, int $userId, bool $inline_request = false): bool
+    public function applyPromoCodeToUser(int $promoCodeId, int $userId, bool $inline_request = false, int $orderId = null): bool
     {
         try {
             $promoCode = $this->model->findOrFail($promoCodeId);
@@ -175,12 +175,20 @@ class PromoCodeService
             $user = User::findOrFail($userId);
 
             if (!$user->usedPromoCodes()->where('promo_code_id', $promoCodeId)->exists()) {
-                $user->usedPromoCodes()->attach($promoCodeId);
+
+                $pivotData = [];
+                if ($orderId !== null) {
+                    $pivotData['order_id'] = $orderId;
+                }
+
+                $user->usedPromoCodes()->attach($promoCodeId, $pivotData);
+
             } else {
                 return false;
             }
 
             return true;
+
         } catch (\Exception $e) {
             \Log::error("Failed to apply promo code {$promoCodeId} to user {$userId}: ".$e->getMessage());
             return false;

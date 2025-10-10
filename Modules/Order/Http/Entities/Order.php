@@ -46,4 +46,17 @@ class Order extends Model
     {
         return $this->belongsTo(Address::class, 'address_id', 'id');
     }
+    // Order.php
+    public function promoCodes()
+    {
+        return $this->hasManyThrough(
+            \Modules\PromoCode\Http\Entities\PromoCode::class,
+            \Illuminate\Database\Eloquent\Relations\Pivot::class,
+            'order_id', // used_promo_codes.order_id
+            'id',       // promo_codes.id
+            'id',       // orders.id
+            'promo_code_id' // used_promo_codes.promo_code_id
+        );
+    }
+
 }

@@ -24,6 +24,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('promo_code_id')->constrained('promo_codes')->onDelete('cascade');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('order_id')->nullable()->constrained('orders')->onDelete('cascade');
             $table->timestamps();
             $table->softDeletes();
         });

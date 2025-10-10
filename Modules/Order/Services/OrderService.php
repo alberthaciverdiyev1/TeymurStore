@@ -256,6 +256,7 @@ class OrderService
     {
         $validated = $request->validated();
         $user = auth()->user();
+        $appliedPromoId = null;
 
         try {
             $address = Address::where('user_id', $user->id)
@@ -286,31 +287,23 @@ class OrderService
 
             foreach ($basket as $item) {
                 $product = $item->product;
-                if (!$product) {
-                    return responseHelper('Product not found.', 404);
-                }
+                if (!$product) return responseHelper('Product not found.', 404);
+
                 $title = is_array($product->title)
                     ? ($product->title['az'] ?? reset($product->title))
                     : $product->title;
 
                 if ($item->color_id && !$product->colors()->where('color_id', $item->color_id)->exists()) {
-                    \Log::warning('Invalid color for product');
-
                     return responseHelper("Selected color is not available for product: {$title}", 400);
                 }
 
                 if ($item->size_id && !$product->sizes()->where('size_id', $item->size_id)->exists()) {
-                    \Log::warning('Invalid size for product');
-
                     return responseHelper("Selected size is not available for product: {$title}", 400);
                 }
 
                 if ($product->stock_count < $item->quantity) {
-                    \Log::warning('Insufficient stock for product');
-
                     return responseHelper("Insufficient stock for product: {$title}", 400);
                 }
-
             }
 
             $validated['address_id'] = $address->id;
@@ -318,17 +311,20 @@ class OrderService
             $validated['transaction_id'] = (string)strtoupper(Str::uuid());
 
             $validated['total_price'] = round($basket->sum(function ($item) {
-                return $item->quantity * (($item->product->discount ?? 0) > 0 ? $item->product->discount : $item->product->price);
+                return $item->quantity * (($item->product->discount ?? 0) > 0
+                        ? $item->product->discount
+                        : $item->product->price);
             }), 2);
 
             $validated['discount_price'] = round($basket->sum(function ($item) {
-                if (($item->product->discount ?? 0) > 0) {
-                    return $item->quantity * ($item->product->price - $item->product->discount);
-                }
-                return 0;
+                return ($item->product->discount ?? 0) > 0
+                    ? $item->quantity * ($item->product->price - $item->product->discount)
+                    : 0;
             }), 2);
 
-            $validated['shipping_price'] = $validated['total_price'] < $delivery['free_from'] ? ($delivery['price'] ?? 0) : 0;
+            $validated['shipping_price'] = $validated['total_price'] < $delivery['free_from']
+                ? ($delivery['price'] ?? 0)
+                : 0;
 
             if (!empty($validated['promo_code'])) {
                 $response = $this->promoCodeService->check($validated['promo_code'], true);
@@ -341,7 +337,8 @@ class OrderService
                         $validated['total_price'] = round($validated['total_price'] - $discountAmount, 2);
                     }
 
-                    $this->promoCodeService->applyPromoCodeToUser($promoData['id'], $user->id, true);
+                    $appliedPromoId = $promoData['id'];
+                    $this->promoCodeService->applyPromoCodeToUser($appliedPromoId, $user->id, true);
                 } else {
                     return responseHelper($response->getData(true)['message'], $response->getData(true)['status_code']);
                 }
@@ -384,48 +381,59 @@ class OrderService
             if ($content['status_code'] === 201) {
                 $orderId = (int)$content['data']['id'];
 
-                handleTransaction(
-                    fn() => OrderStatus::create([
-                        'order_id' => $orderId,
-                        'status' => OrderStatusEnum::PLACED,
-                    ])
-                );
+                handleTransaction(fn() => OrderStatus::create([
+                    'order_id' => $orderId,
+                    'status' => OrderStatusEnum::PLACED,
+                ]));
 
                 foreach ($basket as $item) {
                     $product = $item->product;
                     $price = ($product->discount ?? 0) > 0 ? $product->discount : $product->price;
 
-                    handleTransaction(
-                        fn() => OrderItem::create([
-                            'order_id' => $orderId,
-                            'product_id' => $product->id,
-                            'color_id' => $item->color_id,
-                            'size_id' => $item->size_id,
-                            'quantity' => $item->quantity,
-                            'unit_price' => $price,
-                            'total_price' => $price * $item->quantity,
-                        ])
-                    );
+                    handleTransaction(fn() => OrderItem::create([
+                        'order_id' => $orderId,
+                        'product_id' => $product->id,
+                        'color_id' => $item->color_id,
+                        'size_id' => $item->size_id,
+                        'quantity' => $item->quantity,
+                        'unit_price' => $price,
+                        'total_price' => $price * $item->quantity,
+                    ]));
 
                     $product->decrement('stock_count', $item->quantity);
                     $product->increment('sales_count', $item->quantity);
                 }
 
                 Basket::destroy($basket->pluck('id')->toArray());
+
+                if ($appliedPromoId) {
+                    \DB::table('used_promo_codes')
+                        ->where('promo_code_id', $appliedPromoId)
+                        ->where('user_id', $user->id)
+                        ->whereNull('order_id')
+                        ->update(['order_id' => $orderId]);
+                }
             }
 
             return responseHelper('Order added successfully.', 201);
 
         } catch (\Throwable $e) {
+            if ($appliedPromoId) {
+                \DB::table('used_promo_codes')
+                    ->where('promo_code_id', $appliedPromoId)
+                    ->where('user_id', $user->id)
+                    ->whereNull('order_id')
+                    ->delete();
+            }
+
             \Log::error('Order creation failed', [
                 'user_id'         => $user->id,
                 'exception_class' => get_class($e),
                 'error_message'   => $e->getMessage(),
                 'file'            => $e->getFile(),
                 'line'            => $e->getLine(),
-                'trace'           => collect($e->getTrace())->take(10)->toArray(), // ilk 10 satır
+                'trace'           => collect($e->getTrace())->take(10)->toArray(),
             ]);
-
 
             return responseHelper('Something went wrong while placing the order.', 500);
         }
@@ -437,8 +445,12 @@ class OrderService
         $validated = $request->validated();
         $color_id = $request->color_id ?? null;
         $size_id = $request->size_id ?? null;
-        if ($color_id)unset($validated['color_id']);
-        if ($size_id)unset($validated['size_id']);
+
+        if ($color_id) unset($validated['color_id']);
+        if ($size_id) unset($validated['size_id']);
+
+        $appliedPromoId = null;
+
         try {
             $address = Address::where('user_id', auth()->id())
                 ->where('is_default', true)
@@ -460,15 +472,16 @@ class OrderService
 
             $product = Product::findOrFail($product_id);
 
-            if ($color_id) if (!$product->colors()->where('color_id',$color_id)->exists()){
+            if ($color_id && !$product->colors()->where('color_id', $color_id)->exists()) {
                 return responseHelper('Selected color is not available for this product.', 400);
             }
-            if ($size_id) if (!$product->sizes()->where('size_id',$size_id)->exists()){
+
+            if ($size_id && !$product->sizes()->where('size_id', $size_id)->exists()) {
                 return responseHelper('Selected size is not available for this product.', 400);
             }
 
             if ($product->stock_count < 1) {
-                return responseHelper("Insufficient stock for product: $product->title['az']", 400);
+                return responseHelper("Insufficient stock for product: {$product->title['az']}", 400);
             }
 
             $validated['address_id'] = $address->id;
@@ -479,29 +492,41 @@ class OrderService
 
             $validated['total_price'] = round($price, 2);
             $validated['discount_price'] = $product->discount && $product->discount > 0 ? round($product->price - $product->discount, 2) : 0;
-
             $validated['shipping_price'] = $validated['total_price'] < $delivery['free_from'] ? ($delivery['price'] ?? 0) : 0;
 
-            if (isset($validated['promo_code']) && $validated['promo_code']) {
+            // ========================
+            // PROMO CODE
+            // ========================
+            $promoData = null;
+            if (!empty($validated['promo_code'])) {
+
                 if ($product->discount && $product->discount > 0) {
                     return responseHelper('Promo codes cannot be applied to already discounted products.', 400);
                 }
+
                 $response = $this->promoCodeService->check($validated['promo_code'], true);
 
-                if ($response->getData(true)['status_code'] == 200) {
-                   $promoData = $response->getData(true)['data'];
-                   if ($promoData['discount_percent'] && $promoData['discount_percent'] > 0) {
-                       $discountAmount = ( $product->price * $promoData['discount_percent']) / 100;
-                       $validated['total_price'] = round($validated['total_price'] - $discountAmount, 2);
-                    }
-                      $this->promoCodeService->applyPromoCodeToUser($promoData['id'], $validated['user_id'],true);
-                } else {
+                if ($response->getData(true)['status_code'] !== 200) {
                     return responseHelper($response->getData(true)['message'], $response->getData(true)['status_code']);
                 }
+
+                $promoData = $response->getData(true)['data'];
+
+                if (!empty($promoData['discount_percent']) && $promoData['discount_percent'] > 0) {
+                    $discountAmount = ($product->price * $promoData['discount_percent']) / 100;
+                    $validated['total_price'] = round($validated['total_price'] - $discountAmount, 2);
+                }
+
+                $appliedPromoId = $promoData['id'];
+                $this->promoCodeService->applyPromoCodeToUser($appliedPromoId, $validated['user_id'], true);
+
                 unset($validated['promo_code']);
             }
 
-            if (isset($validated['pay_with_balance']) && $validated['pay_with_balance']) {
+            // ========================
+            // PAYMENT WITH BALANCE
+            // ========================
+            if (!empty($validated['pay_with_balance']) && $validated['pay_with_balance']) {
                 $userBalance = $this->balanceService->getBalance()->getData(true)['data']['balance'] ?? 0;
 
                 if ($userBalance < ($validated['total_price'] + $validated['shipping_price'])) {
@@ -524,6 +549,9 @@ class OrderService
 
             $validated['paid_at'] = now();
 
+            // ========================
+            // ORDER CREATE
+            // ========================
             $data = handleTransaction(
                 fn() => $this->model->create($validated)->refresh(),
                 'Order added successfully.',
@@ -533,46 +561,60 @@ class OrderService
 
             $content = $data->getData(true);
 
-
             if ($content['status_code'] === 201) {
-//            return response()->json($content);
                 $orderId = (int)$content['data']['id'];
 
-                handleTransaction(
-                    fn() => OrderStatus::create([
-                        'order_id' => $orderId,
-                        'status' => OrderStatusEnum::PLACED,
-                    ])->refresh(),
-                );
+                handleTransaction(fn() => OrderStatus::create([
+                    'order_id' => $orderId,
+                    'status' => OrderStatusEnum::PLACED,
+                ])->refresh());
+
                 $product->decrement('stock_count', 1);
                 $product->increment('sales_count', 1);
 
-                handleTransaction(
-                    fn() => OrderItem::create([
-                        'order_id' => $orderId,
-                        'product_id' => $product->id,
-                        'color_id' => $color_id,
-                        'size_id' => $size_id,
-                        'quantity' => 1,
-                        'unit_price' => $price,
-                        'total_price' => $price,
-                    ])
-                );
+                handleTransaction(fn() => OrderItem::create([
+                    'order_id' => $orderId,
+                    'product_id' => $product->id,
+                    'color_id' => $color_id,
+                    'size_id' => $size_id,
+                    'quantity' => 1,
+                    'unit_price' => $price,
+                    'total_price' => $price,
+                ]));
 
-                //  Product::where('id', $product->id)->decrement('stock_count', 1);
-                // Product::where('id', $product->id)->increment('sales_count', 1);
+                // ========================
+                // PROMO CODE PIVOT UPDATE
+                // ========================
+                if ($appliedPromoId) {
+                    \DB::table('used_promo_codes')
+                        ->where('promo_code_id', $appliedPromoId)
+                        ->where('user_id', $validated['user_id'])
+                        ->whereNull('order_id')
+                        ->update(['order_id' => $orderId]);
+                }
             }
 
             return responseHelper('Order added successfully.', 201);
 
         } catch (\Throwable $e) {
+
+            // ========================
+            // PROMO CODE ROLLBACK
+            // ========================
+            if (!empty($appliedPromoId)) {
+                \DB::table('used_promo_codes')
+                    ->where('promo_code_id', $appliedPromoId)
+                    ->where('user_id', $validated['user_id'])
+                    ->whereNull('order_id')
+                    ->delete();
+            }
+
             \Log::error('Order creation failed', [
                 'user_id' => auth()->id(),
                 'error' => $e->getMessage(),
             ]);
 
             return responseHelper('Something went wrong while placing the order.', 500);
-
         }
     }
 
@@ -659,6 +701,7 @@ class OrderService
         }
     }
 
+
     public function downloadReceipt(int $orderId)
     {
         try {
@@ -673,6 +716,22 @@ class OrderService
                 return responseHelper('Order not found.', 404);
             }
 
+            $usedPromo = \DB::table('used_promo_codes')
+                ->where('user_id', $user->id)
+                ->where('order_id', $order->id)
+                ->first();
+
+            $promoData = null;
+            if ($usedPromo) {
+                $promo = \Modules\PromoCode\Http\Entities\PromoCode::find($usedPromo->promo_code_id);
+                if ($promo) {
+                    $promoData = [
+                        'code' => $promo->code,
+                        'discount_percent' => $promo->discount_percent,
+                    ];
+                }
+            }
+
             $orderSummary = [
                 'order_id'        => $order->id,
                 'transaction_id'  => $order->transaction_id,
@@ -681,6 +740,7 @@ class OrderService
                 'items_discounts' => $order->discount_price ?? 0,
                 'shipping'        => $order->shipping_price ?? 0,
                 'total'           => ($order->total_price + ($order->shipping_price ?? 0)) - ($order->discount_price ?? 0),
+                'promo'           => $promoData,
             ];
 
             $pickup = [
@@ -697,6 +757,7 @@ class OrderService
                     'UTF-8', 'UTF-8'
                 );
             }
+
             $htmlContent = receiptPdf($order, $pickup, $orderSummary);
 
             $pdf = Pdf::loadHTML($htmlContent);

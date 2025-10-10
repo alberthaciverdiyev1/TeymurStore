@@ -200,19 +200,21 @@ class ProductService
                 'title' => $title,
                 'description' => $description,
             ];
+            $colors = isset($data['colors']) && is_array($data['colors']) ? $data['colors'] : [];
+            $sizes = isset($data['sizes']) && is_array($data['sizes']) ? $data['sizes'] : [];
 
-            unset($data['title'], $data['description'], $data['images']);
+            unset($data['title'], $data['description'], $data['images'], $data['colors'], $data['sizes']);
 
             $product = $this->model->create($data);
 
             $product->update($translations);
 
-            if (!empty($data['colors'])) {
-                $product->colors()->sync($data['colors']);
+            if (!empty($colors)) {
+                $product->colors()->sync($colors);
             }
 
-            if (!empty($data['sizes'])) {
-                $product->sizes()->sync($data['sizes']);
+            if (!empty($sizes)) {
+                $product->sizes()->sync($sizes);
             }
 
             if (!empty($images_arr) && is_array($images_arr)) {

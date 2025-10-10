@@ -6,6 +6,7 @@ use App\Interfaces\ICrudInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Modules\Product\Http\Entities\Product;
 use Modules\Product\Http\Resources\ProductResource;
 use Modules\User\Http\Entities\Basket;
 use Modules\User\Http\Resources\BasketResource;
@@ -111,12 +112,39 @@ class BasketService implements ICrudInterface
         $validated = $request->validated();
         $validated['user_id'] = auth()->id();
 
+        $product = Product::find($validated['product_id']);
+
+        if (!$product) {
+            return responseHelper('Product not found.', 404);
+        }
+
+        if (!$product->colors()->exists()) {
+            $validated['color_id'] = null;
+        }
+
+        if (!$product->sizes()->exists()) {
+            $validated['size_id'] = null;
+        }
+
+        if (isset($validated['color_id']) && $product->colors()->exists()) {
+            if (!$product->colors()->where('color_id', $validated['color_id'])->exists()) {
+                return responseHelper('Selected color is not available for this product.', 400);
+            }
+        }
+
+        if (isset($validated['size_id']) && $product->sizes()->exists()) {
+            if (!$product->sizes()->where('size_id', $validated['size_id'])->exists()) {
+                return responseHelper('Selected size is not available for this product.', 400);
+            }
+        }
+
         return handleTransaction(
             fn() => $this->model->create($validated)->refresh(),
             'Basket added successfully.',
             BasketResource::class
         );
     }
+
 
     public function update(int $id, $request): JsonResponse
     {
@@ -127,6 +155,13 @@ class BasketService implements ICrudInterface
                 ->where('user_id', auth()->id())
                 ->findOrFail($id);
 
+            if (!isset($data['color_id'])) {
+                unset($data['color_id']);
+            }
+            if (!isset($data['size_id'])) {
+                unset($data['size_id']);
+            }
+
             return handleTransaction(
                 fn() => tap($basket)->update($data)->refresh(),
                 'Basket updated successfully.',
@@ -136,6 +171,7 @@ class BasketService implements ICrudInterface
             return responseHelper('Basket not found.', 404, []);
         }
     }
+
 
     public function delete(int $id): JsonResponse
     {
