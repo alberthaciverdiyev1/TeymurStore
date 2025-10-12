@@ -4,6 +4,7 @@ namespace Modules\Order\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Http\Request;
+use Modules\Product\Http\Resources\ProductResource;
 use Modules\User\Http\Resources\AddressResource;
 use Modules\User\Http\UserResource;
 
@@ -22,7 +23,9 @@ class OrderResource extends JsonResource
             'created_at'      => $this->created_at,
             'user'            => UserResource::make($this->whenLoaded('user')),
             'address'         => AddressResource::make($this->whenLoaded('address')),
-
+            'products'        => ProductResource::collection(
+                $this->whenLoaded('items')->pluck('product')->filter()->values()
+            ),
             'latest_status'   => $this->latestStatus ? [
                 'id'         => $this->latestStatus->id,
                 'status'     => $this->latestStatus->status->label(),
@@ -30,4 +33,5 @@ class OrderResource extends JsonResource
             ] : null,
         ];
     }
+
 }

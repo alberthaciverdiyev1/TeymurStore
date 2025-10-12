@@ -21,7 +21,10 @@ Route::prefix('order')->controller(\Modules\Order\Http\Controllers\OrderControll
         Route::get('/list-admin', 'getAllAdmin')->name('order.adminList');
         Route::post('/', 'orderFromBasket')->name('order.orderFromBasket');
         Route::post('/{product_id}', 'buyOne')->name('order.buyOne');
-        Route::get('/{id}', 'details')->name('order.details');
+        Route::get('/completed', 'completedOrders')->name('order.completed');
+
+        Route::get('/{id}', 'details')->whereNumber('id')->name('order.details');
+
         Route::put('/{id}', 'update')->name('order.update');
         Route::delete('/{id}', 'delete')->name('order.delete');
         Route::get('/receipt/{order_id}', 'getReceipt')->name('order.getReceipt');

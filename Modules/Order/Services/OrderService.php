@@ -18,6 +18,7 @@ use Modules\Order\Http\Entities\OrderStatus;
 use Modules\Order\Http\Resources\OrderDetailResource;
 use Modules\Order\Http\Resources\OrderResource;
 use Modules\Product\Http\Entities\Product;
+use Modules\Product\Http\Resources\ProductResource;
 use Modules\PromoCode\Services\PromoCodeService;
 use Modules\User\Http\Entities\Address;
 use Modules\User\Http\Entities\Basket;
@@ -41,17 +42,110 @@ class OrderService
     public function getAll(Request $request): JsonResponse
     {
         $userId = auth()->id();
+        $status = $request->query('status');
 
-        $orders = $this->model
-            ->with(['items', 'latestStatus', 'address', 'user'])
-            ->where('user_id', $userId)
-            ->latest()
-            ->get();
+        $ordersQuery = $this->model
+            ->with([
+                'items' => function ($q) {
+                    $q->with([
+                        'product' => function ($query) {
+                            $query->with([
+                                'brand',
+                                'category',
+                                'images',
+                                'colors',
+                                'sizes',
+                                'reviews' => fn($q) => $q->select('id', 'product_id', 'user_id', 'rate', 'comment', 'created_at')
+                            ])
+                                ->withAvg('reviews', 'rate')
+                                ->withCount('reviews');
+                        },
+                        'color',
+                        'size'
+                    ]);
+                },
+                'latestStatus',
+                'address',
+                'user'
+            ])
+            ->where('user_id', $userId);
 
+        if ($status) {
+            try {
+                $statusEnum = OrderStatusEnum::fromString($status);
+                $ordersQuery->whereHas('latestStatus', fn($q) => $q->where('status', $statusEnum->value));
+            } catch (\InvalidArgumentException $e) {
+                return responseHelper('Invalid status parameter.', 400);
+            }
+        }
+
+        $orders = $ordersQuery->latest()->get();
         return responseHelper(
             __('Order data retrieved successfully.'),
             200,
             OrderResource::collection($orders)
+        );
+    }
+
+
+    public function completedOrders(Request $request): JsonResponse
+    {
+        $userId = auth()->id();
+
+        $orders = $this->model
+            ->with([
+                'items' => function ($q) {
+                    $q->with([
+                            'product' => function ($query) {
+                                $query->with([
+                                    'brand',
+                                    'category',
+                                    'images',
+                                    'colors',
+                                    'sizes',
+                                    'reviews' => fn($q) => $q->select('id', 'product_id', 'user_id', 'rate', 'comment', 'created_at')
+                                ])
+                                    ->withAvg('reviews', 'rate')
+                                    ->withCount('reviews');
+                            },
+                            'color',
+                            'size'
+                        ]);
+                },
+                'latestStatus',
+                'address',
+                'user'
+            ])
+            ->where('user_id', $userId)
+            ->whereHas('latestStatus', fn($q) => $q->where('status', OrderStatusEnum::DELIVERED->value))
+            ->latest()
+            ->get();
+
+        // Her item üzerinden product'ı güncelle
+        $orders->each(function ($order) {
+            $order->items->transform(function ($item) {
+                $product = $item->product;
+                if ($product) {
+                    $product->rate = $product->reviews_avg_rate !== null ? round($product->reviews_avg_rate, 2) : 0;
+                    $product->rate_count = $product->reviews_count;
+                    $product->is_favorite = Auth::check()
+                        ? $product->favoritedBy()->where('user_id', Auth::id())->exists()
+                        : false;
+                }
+                return $item;
+            });
+        });
+
+        // Sadece product'ları al
+        $products = $orders
+            ->flatMap(fn($order) => $order->items->pluck('product'))
+            ->filter()
+            ->values();
+
+        return responseHelper(
+            __('Delivered products retrieved successfully.'),
+            200,
+            ProductResource::collection($products)
         );
     }
 
@@ -369,8 +463,6 @@ class OrderService
                 }
 
                 unset($validated['pay_with_balance']);
-            }else{
-                return 'https://www.google.com';
             }
 
             $validated['paid_at'] = now();

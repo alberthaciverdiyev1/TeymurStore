@@ -74,4 +74,9 @@ class OrderController extends Controller
     {
         return $this->service->downloadReceipt($orderId);
     }
+
+    public function completedOrders(Request $request)
+    {
+        return $this->service->completedOrders($request);
+    }
 }
