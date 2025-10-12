@@ -75,4 +75,13 @@ class PromoCodeController extends Controller
     {
         return $this->service->delete($id);
     }
+
+    public function checkPromoCodeWithPrice(string $code, Request $request)
+    {
+        return $this->service->checkPromoCodeWithPrice($code, $request);
+    }
+//    public function checkPromoCodeWithPrice(string $code, Request $request)
+//    {
+//        return $this->service->checkPromoCodeWithPrice($code, $request, true,);
+//    }
 }

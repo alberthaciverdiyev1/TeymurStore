@@ -257,10 +257,14 @@ class OrderService
         $validated = $request->validated();
         $user = auth()->user();
         $appliedPromoId = null;
+        $address_id = $request->address_id ?? null;
+        if ($address_id) unset($validated['address_id']);
 
         try {
-            $address = Address::where('user_id', $user->id)
-                ->where('is_default', true)
+
+            $address = Address::where('user_id',$user->id)
+                ->when($address_id, fn($q) => $q->where('id', $address_id),
+                    fn($q) => $q->where('is_default', true))
                 ->first();
 
             if (!$address) {
@@ -427,12 +431,12 @@ class OrderService
             }
 
             \Log::error('Order creation failed', [
-                'user_id'         => $user->id,
+                'user_id' => $user->id,
                 'exception_class' => get_class($e),
-                'error_message'   => $e->getMessage(),
-                'file'            => $e->getFile(),
-                'line'            => $e->getLine(),
-                'trace'           => collect($e->getTrace())->take(10)->toArray(),
+                'error_message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => collect($e->getTrace())->take(10)->toArray(),
             ]);
 
             return responseHelper('Something went wrong while placing the order.', 500);
@@ -440,20 +444,23 @@ class OrderService
     }
 
 
-    public function buyOne($request, $product_id): JsonResponse
+    public function buyOne($request, $product_id)
     {
         $validated = $request->validated();
         $color_id = $request->color_id ?? null;
         $size_id = $request->size_id ?? null;
+        $address_id = $request->address_id ?? null;
 
         if ($color_id) unset($validated['color_id']);
         if ($size_id) unset($validated['size_id']);
+        if ($address_id) unset($validated['address_id']);
 
         $appliedPromoId = null;
 
         try {
             $address = Address::where('user_id', auth()->id())
-                ->where('is_default', true)
+                ->when($address_id, fn($q) => $q->where('id', $address_id),
+                    fn($q) => $q->where('is_default', true))
                 ->first();
 
             if (!$address) {
@@ -545,6 +552,8 @@ class OrderService
                     return responseHelper('Failed to process payment from balance. Please try again.', 500);
                 }
                 unset($validated['pay_with_balance']);
+            } else {
+                return 'https://www.google.com';
             }
 
             $validated['paid_at'] = now();
@@ -618,7 +627,8 @@ class OrderService
         }
     }
 
-    public function update(int $id, $request): JsonResponse
+    public
+    function update(int $id, $request): JsonResponse
     {
         try {
             $data = $request->validated();
@@ -639,7 +649,8 @@ class OrderService
         }
     }
 
-    public function delete(int $id): JsonResponse
+    public
+    function delete(int $id): JsonResponse
     {
         try {
             $order = $this->model
@@ -657,7 +668,9 @@ class OrderService
             ], 404);
         }
     }
-    public function getReceipt(int $orderId): JsonResponse
+
+    public
+    function getReceipt(int $orderId): JsonResponse
     {
         try {
             $order = Order::with(['items.product', 'address'])
@@ -670,25 +683,25 @@ class OrderService
             }
 
             $orderSummary = [
-                'order_id'       => $order->id,
-                'transaction_id'       => $order->transaction_id,
-                'order_time'     => $order->created_at->format('Y-m-d H:i:s'),
-                'items_totals'   => $order->items->sum(fn($item) => $item->total_price),
-                'items_discounts'=> $order->discount_price ?? 0,
-                'shipping'       => $order->shipping_price ?? 0,
-                'total'          => ($order->total_price + ($order->shipping_price ?? 0)) - ($order->discount_price ?? 0),
+                'order_id' => $order->id,
+                'transaction_id' => $order->transaction_id,
+                'order_time' => $order->created_at->format('Y-m-d H:i:s'),
+                'items_totals' => $order->items->sum(fn($item) => $item->total_price),
+                'items_discounts' => $order->discount_price ?? 0,
+                'shipping' => $order->shipping_price ?? 0,
+                'total' => ($order->total_price + ($order->shipping_price ?? 0)) - ($order->discount_price ?? 0),
             ];
 
             $pickup = [
-                'city'      => $order->address->city ?? null,
-                'town'      => $order->address->town_village_district ?? null,
-                'street'    => $order->address->street_building_number ?? null,
+                'city' => $order->address->city ?? null,
+                'town' => $order->address->town_village_district ?? null,
+                'street' => $order->address->street_building_number ?? null,
                 'apartment' => $order->address->unit_floor_apartment ?? null,
-                'phone'     => $order->address->contact_number ?? auth()->user()->phone,
+                'phone' => $order->address->contact_number ?? auth()->user()->phone,
             ];
             return responseHelper('Order receipt generated successfully.', 200, [
                 'order_summary' => $orderSummary,
-                'pickup'        => $pickup,
+                'pickup' => $pickup,
             ]);
 
         } catch (\Throwable $e) {
@@ -702,7 +715,8 @@ class OrderService
     }
 
 
-    public function downloadReceipt(int $orderId)
+    public
+    function downloadReceipt(int $orderId)
     {
         try {
             $user = auth()->user();
@@ -733,22 +747,22 @@ class OrderService
             }
 
             $orderSummary = [
-                'order_id'        => $order->id,
-                'transaction_id'  => $order->transaction_id,
-                'order_time'      => $order->created_at->format('Y-m-d H:i:s'),
-                'items_totals'    => $order->items->sum(fn($item) => $item->total_price),
+                'order_id' => $order->id,
+                'transaction_id' => $order->transaction_id,
+                'order_time' => $order->created_at->format('Y-m-d H:i:s'),
+                'items_totals' => $order->items->sum(fn($item) => $item->total_price),
                 'items_discounts' => $order->discount_price ?? 0,
-                'shipping'        => $order->shipping_price ?? 0,
-                'total'           => ($order->total_price + ($order->shipping_price ?? 0)) - ($order->discount_price ?? 0),
-                'promo'           => $promoData,
+                'shipping' => $order->shipping_price ?? 0,
+                'total' => ($order->total_price + ($order->shipping_price ?? 0)) - ($order->discount_price ?? 0),
+                'promo' => $promoData,
             ];
 
             $pickup = [
-                'city'      => $order->address->city ?? null,
-                'town'      => $order->address->town_village_district ?? null,
-                'street'    => $order->address->street_building_number ?? null,
+                'city' => $order->address->city ?? null,
+                'town' => $order->address->town_village_district ?? null,
+                'street' => $order->address->street_building_number ?? null,
                 'apartment' => $order->address->unit_floor_apartment ?? null,
-                'phone'     => $order->address->contact_number ?? $user->phone,
+                'phone' => $order->address->contact_number ?? $user->phone,
             ];
 
             foreach ($order->items as $item) {
@@ -768,8 +782,8 @@ class OrderService
         } catch (\Throwable $e) {
             \Log::error('Receipt PDF generation failed', [
                 'user_id' => $user->id ?? null,
-                'error'   => $e->getMessage(),
-                'trace'   => $e->getTraceAsString(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return responseHelper('Something went wrong while generating the receipt PDF.', 500);

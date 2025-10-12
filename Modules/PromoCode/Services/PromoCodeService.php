@@ -7,6 +7,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Modules\PromoCode\Http\Entities\PromoCode;
 use Modules\PromoCode\Http\Resources\PromoCodeResource;
+use Modules\User\Http\Entities\Basket;
 use Modules\User\Http\Entities\User;
 
 class PromoCodeService
@@ -97,6 +98,63 @@ class PromoCodeService
 
         } catch (\Exception $e) {
             return responseHelper('An error occurred.', 500, [], $inline_request);
+        }
+    }
+
+    public function checkPromoCodeWithPrice(string $code, $request, bool $inline_request = false)
+    {
+        try {
+            $user = auth()->user();
+
+            $promoCode = $this->model
+                ->where('code', $code)
+                ->where('is_active', true)
+                ->first();
+
+            if (!$promoCode) {
+                return responseHelper('Promo code not found.', 404, [], $inline_request);
+            }
+
+            if ($promoCode->user_count <= 0) {
+                return responseHelper('Promo code usage limit reached.', 400, [], $inline_request);
+            }
+
+            if ($user->usedPromoCodes()->where('promo_code_id', $promoCode->id)->exists()) {
+                return responseHelper('You have already used this promo code.', 400, [], $inline_request);
+            }
+
+            $basket = Basket::with('product')
+                ->where('user_id', $user->id)
+                ->where('selected', true)
+                ->get();
+
+            if ($basket->isEmpty()) {
+                return responseHelper('Your basket is empty.', 400, [], $inline_request);
+            }
+
+            $totalPrice = round(
+                $basket->sum(fn($item) => $item->quantity * ($item->product->discount > 0
+                        ? $item->product->discount
+                        : $item->product->price)),
+                2
+            );
+
+            $discountedPrice = round($totalPrice * (1 - $promoCode->discount_percent / 100), 2);
+
+            return responseHelper('Promo code checked successfully.', 200, [
+                'original_price'  => $totalPrice,
+             //   'discount_percent' => $promoCode->discount_percent,
+                'discounted_price' => $discountedPrice,
+            ], $inline_request);
+
+        } catch (\Throwable $e) {
+            \Log::error('Promo code check failed', [
+                'code' => $code,
+                'user_id' => $user->id ?? null,
+                'error' => $e->getMessage(),
+            ]);
+
+            return responseHelper('An unexpected error occurred.', 500, [], $inline_request);
         }
     }
 
