@@ -21,16 +21,16 @@ class OrderResource extends JsonResource
             'paid_at'         => $this->paid_at,
             'note'            => $this->note,
             'created_at'      => $this->created_at,
-            'user'            => UserResource::make($this->whenLoaded('user')),
-            'address'         => AddressResource::make($this->whenLoaded('address')),
-            'products'        => ProductResource::collection(
-                $this->whenLoaded('items')->pluck('product')->filter()->values()
-            ),
             'latest_status'   => $this->latestStatus ? [
                 'id'         => $this->latestStatus->id,
                 'status'     => $this->latestStatus->status->label(),
                 'created_at' => $this->latestStatus->created_at,
             ] : null,
+            'user'            => UserResource::make($this->whenLoaded('user')),
+            'address'         => AddressResource::make($this->whenLoaded('address')),
+            'products'        => ProductResource::collection(
+                $this->whenLoaded('items')->pluck('product')->filter()->values()
+            ),
         ];
     }
 

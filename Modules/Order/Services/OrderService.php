@@ -96,21 +96,21 @@ class OrderService
             ->with([
                 'items' => function ($q) {
                     $q->with([
-                            'product' => function ($query) {
-                                $query->with([
-                                    'brand',
-                                    'category',
-                                    'images',
-                                    'colors',
-                                    'sizes',
-                                    'reviews' => fn($q) => $q->select('id', 'product_id', 'user_id', 'rate', 'comment', 'created_at')
-                                ])
-                                    ->withAvg('reviews', 'rate')
-                                    ->withCount('reviews');
-                            },
-                            'color',
-                            'size'
-                        ]);
+                        'product' => function ($query) {
+                            $query->with([
+                                'brand',
+                                'category',
+                                'images',
+                                'colors',
+                                'sizes',
+                                'reviews' => fn($q) => $q->select('id', 'product_id', 'user_id', 'rate', 'comment', 'created_at')
+                            ])
+                                ->withAvg('reviews', 'rate')
+                                ->withCount('reviews');
+                        },
+                        'color',
+                        'size'
+                    ]);
                 },
                 'latestStatus',
                 'address',
@@ -352,11 +352,13 @@ class OrderService
         $user = auth()->user();
         $appliedPromoId = null;
         $address_id = $request->address_id ?? null;
+        $pay_with_balance = $request->pay_with_balance ?? null;
         if ($address_id) unset($validated['address_id']);
+         unset($validated['pay_with_balance']);
 
         try {
 
-            $address = Address::where('user_id',$user->id)
+            $address = Address::where('user_id', $user->id)
                 ->when($address_id, fn($q) => $q->where('id', $address_id),
                     fn($q) => $q->where('is_default', true))
                 ->first();
@@ -443,7 +445,7 @@ class OrderService
                 unset($validated['promo_code']);
             }
 
-            if (!empty($validated['pay_with_balance'])) {
+            if ($pay_with_balance) {
                 $userBalance = $this->balanceService->getBalance()->getData(true)['data']['balance'] ?? 0;
 
                 if ($userBalance < ($validated['total_price'] + $validated['shipping_price'])) {
@@ -461,8 +463,6 @@ class OrderService
                 if (!($balanceContent['success'] && $balanceContent['status_code'] === 201)) {
                     return responseHelper('Failed to process payment from balance. Please try again.', 500);
                 }
-
-                unset($validated['pay_with_balance']);
             }
 
             $validated['paid_at'] = now();
@@ -471,10 +471,12 @@ class OrderService
                 fn() => $this->model->create($validated)->refresh(),
                 'Order added successfully.',
                 null,
-                200
+                201
             );
 
             $content = $data->getData(true);
+
+        //    dd($content);
 
             if ($content['status_code'] === 201) {
                 $orderId = (int)$content['data']['id'];
@@ -511,6 +513,11 @@ class OrderService
                         ->whereNull('order_id')
                         ->update(['order_id' => $orderId]);
                 }
+            }
+            if (!$pay_with_balance) {
+                return responseHelper('Order redirected to payment page.', 200,[
+                    'payment_url' => 'https://www.google.com'
+                ]);
             }
 
             return responseHelper('Order added successfully.', 200);
@@ -695,6 +702,9 @@ class OrderService
                         ->whereNull('order_id')
                         ->update(['order_id' => $orderId]);
                 }
+            }
+            if (empty($validated['pay_with_balance'])) {
+                return 'https://www.google.com';
             }
 
             return responseHelper('Order added successfully.', 201);
