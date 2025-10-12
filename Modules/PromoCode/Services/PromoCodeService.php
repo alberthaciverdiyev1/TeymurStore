@@ -112,15 +112,15 @@ class PromoCodeService
                 ->first();
 
             if (!$promoCode) {
-                return responseHelper('Promo code not found.', 404, [], $inline_request);
+                return responseHelper('Promo code not found.', 404, []);
             }
 
             if ($promoCode->user_count <= 0) {
-                return responseHelper('Promo code usage limit reached.', 400, [], $inline_request);
+                return responseHelper('Promo code usage limit reached.', 400, []);
             }
 
             if ($user->usedPromoCodes()->where('promo_code_id', $promoCode->id)->exists()) {
-                return responseHelper('You have already used this promo code.', 400, [], $inline_request);
+                return responseHelper('You have already used this promo code.', 400, []);
             }
 
             $basket = Basket::with('product')
@@ -129,7 +129,7 @@ class PromoCodeService
                 ->get();
 
             if ($basket->isEmpty()) {
-                return responseHelper('Your basket is empty.', 400, [], $inline_request);
+                return responseHelper('Your basket is empty.', 400, []);
             }
 
             $totalPrice = round(
@@ -145,7 +145,7 @@ class PromoCodeService
                 'original_price'  => $totalPrice,
              //   'discount_percent' => $promoCode->discount_percent,
                 'discounted_price' => $discountedPrice,
-            ], $inline_request);
+            ]);
 
         } catch (\Throwable $e) {
             \Log::error('Promo code check failed', [
@@ -154,7 +154,7 @@ class PromoCodeService
                 'error' => $e->getMessage(),
             ]);
 
-            return responseHelper('An unexpected error occurred.', 500, [], $inline_request);
+            return responseHelper('An unexpected error occurred.', 500, []);
         }
     }
 

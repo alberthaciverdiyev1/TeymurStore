@@ -252,7 +252,7 @@ class OrderService
 //        }
 //    }
 
-    public function orderFromBasket($request): JsonResponse
+    public function orderFromBasket($request)
     {
         $validated = $request->validated();
         $user = auth()->user();
@@ -369,6 +369,8 @@ class OrderService
                 }
 
                 unset($validated['pay_with_balance']);
+            }else{
+                return 'https://www.google.com';
             }
 
             $validated['paid_at'] = now();
@@ -377,7 +379,7 @@ class OrderService
                 fn() => $this->model->create($validated)->refresh(),
                 'Order added successfully.',
                 null,
-                201
+                200
             );
 
             $content = $data->getData(true);
@@ -419,7 +421,7 @@ class OrderService
                 }
             }
 
-            return responseHelper('Order added successfully.', 201);
+            return responseHelper('Order added successfully.', 200);
 
         } catch (\Throwable $e) {
             if ($appliedPromoId) {

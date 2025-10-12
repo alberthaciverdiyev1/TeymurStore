@@ -47,7 +47,7 @@ class OrderController extends Controller
         return $this->service->details($id);
     }
 
-    public function orderFromBasket(OrderAddRequest $request): JsonResponse
+    public function orderFromBasket(OrderAddRequest $request)
     {
         return $this->service->orderFromBasket($request);
     }
