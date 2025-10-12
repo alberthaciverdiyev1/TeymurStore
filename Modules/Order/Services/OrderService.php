@@ -53,8 +53,6 @@ class OrderService
                                 'brand',
                                 'category',
                                 'images',
-                                'colors',
-                                'sizes',
                                 'reviews' => fn($q) => $q->select('id', 'product_id', 'user_id', 'rate', 'comment', 'created_at')
                             ])
                                 ->withAvg('reviews', 'rate')
@@ -79,7 +77,23 @@ class OrderService
             }
         }
 
-        $orders = $ordersQuery->latest()->get();
+        $ordersQuery = $ordersQuery->orderBy('id', 'desc');
+        $orders = $ordersQuery->get();
+
+        $orders->each(function ($order) {
+            $order->items->transform(function ($item) {
+                $product = $item->product;
+                if ($product) {
+                    $product->rate = $product->reviews_avg_rate !== null ? round($product->reviews_avg_rate, 2) : 0;
+                    $product->rate_count = $product->reviews_count;
+                    $product->is_favorite = Auth::check()
+                        ? $product->favoritedBy()->where('user_id', Auth::id())->exists()
+                        : false;
+                }
+                return $item;
+            });
+        });
+
         return responseHelper(
             __('Order data retrieved successfully.'),
             200,
@@ -121,7 +135,6 @@ class OrderService
             ->latest()
             ->get();
 
-        // Her item üzerinden product'ı güncelle
         $orders->each(function ($order) {
             $order->items->transform(function ($item) {
                 $product = $item->product;
@@ -136,7 +149,6 @@ class OrderService
             });
         });
 
-        // Sadece product'ları al
         $products = $orders
             ->flatMap(fn($order) => $order->items->pluck('product'))
             ->filter()
@@ -176,8 +188,6 @@ class OrderService
                                     'brand',
                                     'category',
                                     'images',
-                                    'colors',
-                                    'sizes',
                                     'reviews' => function ($q) {
                                         $q->select('id', 'product_id', 'user_id', 'rate', 'comment', 'created_at');
                                     }

@@ -28,37 +28,6 @@ class OrderDetailResource extends JsonResource
             'updated_at'   => $this->updated_at,
             'deleted_at'   => $this->deleted_at,
 
-            'items' => $this->whenLoaded('items', function () {
-                return $this->items->map(function ($item) {
-                    $product = $item->product;
-
-                    if ($product) {
-                        $product->rate = $product->reviews_avg_rate !== null ? round($product->reviews_avg_rate, 2) : 0;
-                        $product->rate_count = $product->reviews_count;
-                        $product->is_favorite = auth()->check()
-                            ? $product->favoritedBy()->where('user_id', auth()->id())->exists()
-                            : false;
-                    }
-
-                    return [
-                        'id'         => $item->id,
-                        'order_id'   => $item->order_id,
-                        'product_id' => $item->product_id,
-                        'color_id'   => $item->color_id,
-                        'size_id'    => $item->size_id,
-                        'quantity'   => $item->quantity,
-                        'unit_price' => $item->unit_price,
-                        'total_price'=> $item->total_price,
-                        'created_at' => $item->created_at,
-                        'updated_at' => $item->updated_at,
-                        'deleted_at' => $item->deleted_at,
-                        'product'    => $product ? new ProductResource($product) : null,
-                        'color'      => $item->color ? new ColorResource($item->color) : null,
-                        'size'       => $item->size ? new SizeResource($item->size) : null,
-                    ];
-                });
-            }),
-
             'statuses' => $this->whenLoaded('statuses', function () {
                 return $this->statuses->map(function ($status) {
                     return [
@@ -71,6 +40,57 @@ class OrderDetailResource extends JsonResource
 
             'address' => new AddressResource($this->whenLoaded('address')),
             'user'    => new UserResource($this->whenLoaded('user')),
+
+            'items'   => $this->whenLoaded('items', function () {
+                return $this->items->map(function ($item) {
+                    return [
+                        'id'           => $item->id,
+                        'quantity'     => $item->quantity,
+                        'unit_price'   => $item->unit_price,
+                        'total_price'  => $item->total_price,
+                        'color' => $item->color ? ColorResource::make($item->color) : null,
+                        'size'         => $item->size ? [
+                            'id'    => $item->size->id,
+                            'name'  => $item->size->name,
+                        ] : null,
+                        'product'      => $item->product
+                            ? ProductResource::make($item->product)
+                            : null,
+                    ];
+                });
+            }),
+
+//            'items' => $this->whenLoaded('items', function () {
+//                return $this->items->map(function ($item) {
+//                    $product = $item->product;
+//
+//                    if ($product) {
+//                        $product->rate = $product->reviews_avg_rate !== null ? round($product->reviews_avg_rate, 2) : 0;
+//                        $product->rate_count = $product->reviews_count;
+//                        $product->is_favorite = auth()->check()
+//                            ? $product->favoritedBy()->where('user_id', auth()->id())->exists()
+//                            : false;
+//                    }
+//
+//                    return [
+//                        'id'         => $item->id,
+//                        'order_id'   => $item->order_id,
+//                        'product_id' => $item->product_id,
+//                        'color_id'   => $item->color_id,
+//                        'size_id'    => $item->size_id,
+//                        'quantity'   => $item->quantity,
+//                        'unit_price' => $item->unit_price,
+//                        'total_price'=> $item->total_price,
+//                        'created_at' => $item->created_at,
+//                        'updated_at' => $item->updated_at,
+//                        'deleted_at' => $item->deleted_at,
+//                        'product'    => $product ? new ProductResource($product) : null,
+//                        'color'      => $item->color ? new ColorResource($item->color) : null,
+//                        'size'       => $item->size ? new SizeResource($item->size) : null,
+//                    ];
+//                });
+//            }),
+
         ];
     }
 }

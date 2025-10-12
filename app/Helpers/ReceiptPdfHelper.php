@@ -19,15 +19,15 @@ if (!function_exists('receiptPdf')) {
                 if ($hasPromo) {
                     $discountedPrice = $item->unit_price * $item->quantity * (1 - $promoPercent / 100);
                     $totalDiscountedPrice = $item->unit_price * $item->quantity - ($item->unit_price * $item->quantity * (1 - $promoPercent / 100));
-                    $discountedPriceHtml = "<td>{$discountedPrice} {$trans(['az' => 'manat', 'en' => 'AZN', 'ru' => 'манат', 'tr' => 'TL'])}</td>
-                                            <td>{$totalDiscountedPrice} {$trans(['az' => 'manat', 'en' => 'AZN', 'ru' => 'манат', 'tr' => 'TL'])}</td>";
+                    $discountedPriceHtml = "<td>{$discountedPrice} {$trans(['az' => 'manat', 'en' => 'AZN', 'ru' => 'манат', 'tr' => 'AZN'])}</td>
+                                            <td>{$totalDiscountedPrice} {$trans(['az' => 'manat', 'en' => 'AZN', 'ru' => 'манат', 'tr' => 'AZN'])}</td>";
                 }
 
                 $itemsHtml .= "<tr>
                                     <td>{$title}</td>
                                     <td>{$item->quantity}</td>
-                                    <td>{$item->product->price} {$trans(['az' => 'manat', 'en' => 'AZN', 'ru' => 'манат', 'tr' => 'TL'])}</td>
-                                    <td>" . ($item->product->price * $item->quantity) . " {$trans(['az' => 'manat', 'en' => 'AZN', 'ru' => 'манат', 'tr' => 'TL'])}</td>
+                                    <td>{$item->product->price} {$trans(['az' => 'manat', 'en' => 'AZN', 'ru' => 'манат', 'tr' => 'AZN'])}</td>
+                                    <td>" . ($item->product->price * $item->quantity) . " {$trans(['az' => 'manat', 'en' => 'AZN', 'ru' => 'манат', 'tr' => 'AZN'])}</td>
                                     {$discountedPriceHtml}
                                </tr>";
             }
