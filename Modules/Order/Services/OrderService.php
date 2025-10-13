@@ -226,145 +226,16 @@ class OrderService
         }
     }
 
-//    public function orderFromBasket($request): JsonResponse
-//    {
-//        $validated = $request->validated();
-//
-//        try {
-//
-//            $address = Address::where('user_id', auth()->id())
-//                ->where('is_default', true)
-//                ->first();
-//
-//            if (!$address) {
-//                return responseHelper('Please set a valid default address with a city before placing an order.', 400);
-//            }
-//
-//            $deliveryResponse = $this->deliveryService
-//                ->details(null, $address->city)
-//                ->getData(true);
-//
-//            $delivery = $deliveryResponse['data'] ?? null;
-//
-//            if (!$delivery) {
-//                return responseHelper('Delivery service is not available for your city.', 400);
-//            }
-//
-//            $basket = Basket::with(['product'])
-//                ->where('user_id', auth()->id())
-//                ->where('selected', true)
-//                ->get();
-//
-//            if ($basket->isEmpty()) {
-//                return response()->json([
-//                    'success' => 400,
-//                    'message' => __('Your basket is empty.'),
-//                ], 400);
-//            }
-//
-//            foreach ($basket as $item) {
-//                if ($item->product->stock_count < $item->quantity) {
-//                    return responseHelper("Insufficient stock for product: $item->product->title['az']", 400);
-//                }
-//            }
-//
-//            $validated['address_id'] = $address->id;
-//            $validated['user_id'] = auth()->id();
-//            $validated['transaction_id'] = (string)strtoupper(Str::uuid());
-//
-//            $validated['total_price'] = round($basket->sum(function ($item) {
-//                $price = $item->product->discount ?? null;
-//                return $item->quantity * (($price && $price > 0) ? $price : $item->product->price);
-//            }), 2);
-//
-//            $validated['discount_price'] = round($basket->sum(function ($item) {
-//                if (!empty($item->product->discount) && $item->product->discount > 0) {
-//                    return $item->quantity * ($item->product->price - $item->product->discount);
-//                }
-//                return 0;
-//            }), 2);
-//            $validated['shipping_price'] = $validated['total_price'] < $delivery['free_from'] ? ($delivery['price'] ?? 0) : 0;
-//
-//            if (isset($validated['pay_with_balance']) && $validated['pay_with_balance']) {
-//                $userBalance = $this->balanceService->getBalance()->getData(true)['data']['balance'] ?? 0;
-//
-//                if ($userBalance < ($validated['total_price'] + $validated['shipping_price'])) {
-//                    return responseHelper('Insufficient balance to complete the order.', 400);
-//                }
-//
-//                $balanceResponse = $this->balanceService->withdraw($validated['user_id'], ($validated['total_price'] + $validated['shipping_price']), 'Payment for order with transaction ID: ' . $validated['transaction_id']);
-//                $balanceContent = $balanceResponse->getData(true);
-//
-//                if ($balanceContent['success'] !== 201) {
-//                    return responseHelper('Failed to process payment from balance. Please try again.', 500);
-//                }
-//                unset($validated['pay_with_balance']);
-//            }
-//
-//            $validated['paid_at'] = now();
-//
-//            $data = handleTransaction(
-//                fn() => $this->model->create($validated)->refresh(),
-//                'Order added successfully.'
-//            );
-//
-//            $content = $data->getData(true);
-//            if ($content['success']) {
-//                $orderId = (int)$content['data']['id'];
-//
-//                handleTransaction(
-//                    fn() => OrderStatus::create([
-//                        'order_id' => $orderId,
-//                        'status' => OrderStatusEnum::PLACED,
-//                    ])->refresh(),
-//                );
-//
-//                foreach ($basket as $item) {
-//                    handleTransaction(
-//                        fn() => OrderItem::create([
-//                            'order_id' => $orderId,
-//                            'product_id' => $item->product->id,
-//                            'color_id' => $item->color_id,
-//                            'size_id' => $item->size_id,
-//                            'quantity' => $item->quantity,
-//                            'unit_price' => $item->product->discount ?? $item->product->price,
-//                            'total_price' => ($item->product->discount ?? $item->product->price) * $item->quantity,
-//                        ])
-//                    );
-//
-//                    Product::where('id', $item->product->id)
-//                        ->decrement('stock_count', $item->quantity);
-//
-//                    Product::where('id', $item->product->id)
-//                        ->increment('sales_count', $item->quantity);
-//                }
-//
-//                Basket::destroy($basket->pluck('id')->toArray());
-//            }
-//
-//            return responseHelper('Order added successfully.', 201);
-//
-//
-//        } catch (\Throwable $e) {
-//            \Log::error('Order creation failed', [
-//                'user_id' => auth()->id(),
-//                'error' => $e->getMessage(),
-//            ]);
-//
-//            return responseHelper('Something went wrong while placing the order.', 500);
-//
-//        }
-//    }
-
     public function orderFromBasket($request)
     {
         $validated = $request->validated();
         $user = auth()->user();
         $appliedPromoId = null;
         $address_id = $request->address_id ?? null;
-        $pay_with_balance = $request->pay_with_balance ?? null;
+        $pay_with_balance = $request->pay_with_balance ?? false;
+
         if ($address_id) unset($validated['address_id']);
-         unset($validated['pay_with_balance']);
+        unset($validated['pay_with_balance']);
 
         try {
 
@@ -486,8 +357,6 @@ class OrderService
 
             $content = $data->getData(true);
 
-        //    dd($content);
-
             if ($content['status_code'] === 201) {
                 $orderId = (int)$content['data']['id'];
 
@@ -513,7 +382,6 @@ class OrderService
                     $product->decrement('stock_count', $item->quantity);
                     $product->increment('sales_count', $item->quantity);
                 }
-
                 Basket::destroy($basket->pluck('id')->toArray());
 
                 if ($appliedPromoId) {
@@ -525,12 +393,16 @@ class OrderService
                 }
             }
             if (!$pay_with_balance) {
-                return responseHelper('Order redirected to payment page.', 200,[
-                    'payment_url' => 'https://www.google.com'
+                return responseHelper('Order redirected to payment page.', 200, [
+                    'payment_url' => 'https://www.google.com',
+                    'pay_with_balance'=>$pay_with_balance
                 ]);
             }
 
-            return responseHelper('Order added successfully.', 200);
+            return responseHelper('Order added successfully.', 200, [
+                'payment_url' => '',
+                'pay_with_balance'=>$pay_with_balance
+            ]);
 
         } catch (\Throwable $e) {
             if ($appliedPromoId) {
@@ -550,7 +422,9 @@ class OrderService
                 'trace' => collect($e->getTrace())->take(10)->toArray(),
             ]);
 
-            return responseHelper('Something went wrong while placing the order.', 500);
+            return responseHelper('Something went wrong while placing the order.', 500, [
+                'payment_url' => ''
+            ]);
         }
     }
 
