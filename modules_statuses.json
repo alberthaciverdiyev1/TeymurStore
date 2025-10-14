@@ -12,5 +12,6 @@
     "Balance": true,
     "HelpAndPolicy": true,
     "PromoCode": true,
-    "Banner": true
+    "Banner": true,
+    "Payment": true
 }

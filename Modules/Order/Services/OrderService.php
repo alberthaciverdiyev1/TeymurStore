@@ -17,6 +17,7 @@ use Modules\Order\Http\Entities\OrderItem;
 use Modules\Order\Http\Entities\OrderStatus;
 use Modules\Order\Http\Resources\OrderDetailResource;
 use Modules\Order\Http\Resources\OrderResource;
+use Modules\Payment\Service\PaymentService;
 use Modules\Product\Http\Entities\Product;
 use Modules\Product\Http\Resources\ProductResource;
 use Modules\PromoCode\Services\PromoCodeService;
@@ -30,13 +31,15 @@ class OrderService
     private DeliveryService $deliveryService;
     private BalanceService $balanceService;
     private PromoCodeService $promoCodeService;
+    private PaymentService $paymentService;
 
-    public function __construct(Order $model, DeliveryService $deliveryService, BalanceService $balanceService, PromoCodeService $promoCodeService)
+    public function __construct(Order $model, DeliveryService $deliveryService, BalanceService $balanceService, PromoCodeService $promoCodeService,PaymentService $paymentService)
     {
         $this->model = $model;
         $this->deliveryService = $deliveryService;
         $this->balanceService = $balanceService;
         $this->promoCodeService = $promoCodeService;
+        $this->paymentService = $paymentService;
     }
 
     public function getAll(Request $request): JsonResponse
@@ -395,13 +398,13 @@ class OrderService
             if (!$pay_with_balance) {
                 return responseHelper('Order redirected to payment page.', 200, [
                     'payment_url' => 'https://www.google.com',
-                    'pay_with_balance'=>$pay_with_balance
+                    'pay_with_balance' => $pay_with_balance
                 ]);
             }
 
             return responseHelper('Order added successfully.', 200, [
                 'payment_url' => '',
-                'pay_with_balance'=>$pay_with_balance
+                'pay_with_balance' => $pay_with_balance
             ]);
 
         } catch (\Throwable $e) {
