@@ -1,8 +1,8 @@
 <?php
 
 Route::prefix('product')->controller(\Modules\Product\Http\Controllers\ProductController::class)->group(function () {
-    Route::get('/statistics', 'statistics')->name('product.statistics');
 
+    Route::get('/statistics', 'statistics')->name('product.statistics');
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', 'list')->name('product.list');
         Route::get('/{id}', 'details')->name('product.details');

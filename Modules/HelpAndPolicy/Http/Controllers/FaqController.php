@@ -14,7 +14,6 @@ class FaqController extends Controller
 
     function __construct(FaqService $service)
     {
-        $this->middleware('permission:view faqs')->only('getAll');
         $this->middleware('permission:add faq')->only('add');
         $this->middleware('permission:update faq')->only('update');
         $this->middleware('permission:delete faq')->only('delete');

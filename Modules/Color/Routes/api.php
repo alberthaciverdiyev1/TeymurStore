@@ -15,9 +15,9 @@ use Illuminate\Http\Request;
 
 
 Route::prefix('color')->controller(\Modules\Color\Http\Controllers\ColorController::class)->group(function () {
-    Route::get('/', 'list')->name('color.list');
 
     Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/', 'list')->name('color.list');
         Route::post('/', 'add')->name('color.add');
         Route::get('/{id}', 'details')->name('color.details');
         Route::put('/{id}', 'update')->name('color.update');

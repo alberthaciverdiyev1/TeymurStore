@@ -15,9 +15,9 @@ use Illuminate\Http\Request;
 
 
 Route::prefix('size')->controller(\Modules\Size\Http\Controllers\SizeController::class)->group(function () {
-    Route::get('/', 'list')->name('size.list');
 
     Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/', 'list')->name('size.list');
         Route::post('/', 'add')->name('size.add');
         Route::get('/{id}', 'details')->name('size.details');
         Route::put('/{id}', 'update')->name('size.update');
