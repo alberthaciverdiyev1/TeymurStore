@@ -5,6 +5,7 @@ namespace Modules\User\Http\Entities;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
@@ -15,22 +16,22 @@ use Modules\Product\Http\Entities\Review;
 use Modules\User\Database\Factories\UserFactory;
 use Modules\User\Http\Traits\UserAccessorTrait;
 use Modules\User\Http\Traits\UserRelationTrait;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasFactory, HasApiTokens, Notifiable,UserAccessorTrait,UserRelationTrait;
+    use HasFactory, HasApiTokens, Notifiable, UserAccessorTrait, UserRelationTrait, HasRoles, SoftDeletes;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-        'email_verified_at'
-    ];
+    protected $guard_name = 'sanctum';
+
+//    protected $fillable = [
+//        'name',
+//        'email',
+//        'password',
+//        'email_verified_at'
+//    ];
+
+    protected $guarded = [];
 
     /**
      * The attributes that should be hidden for serialization.

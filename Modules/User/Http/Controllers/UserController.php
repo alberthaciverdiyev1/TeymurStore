@@ -12,8 +12,14 @@ use Modules\User\Services\UserService;
  */
 class UserController extends Controller
 {
+    private UserService $service;
+
     function __construct(UserService $service)
     {
+        $this->middleware('permission:view users')->only('getAll');
+        $this->middleware('permission:details user')->only('details');
+        $this->middleware('permission:update user')->only('changeEmail', 'changeName', 'changeSurname', 'changePhone');
+
         $this->service = $service;
     }
 
@@ -45,5 +51,10 @@ class UserController extends Controller
     public function details(int $id = null): JsonResponse
     {
         return $this->service->details($id);
+    }
+
+    public function deleteMyAccount(): JsonResponse
+    {
+        return $this->service->deleteMyAccount();
     }
 }

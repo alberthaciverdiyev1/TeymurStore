@@ -13,5 +13,6 @@
     "HelpAndPolicy": true,
     "PromoCode": true,
     "Banner": true,
-    "Payment": true
+    "Payment": true,
+    "RoleAndPermissions": true
 }

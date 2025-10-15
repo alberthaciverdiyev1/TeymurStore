@@ -21,15 +21,18 @@ class OrderController extends Controller
 
     public function __construct(OrderService $service)
     {
+        $this->middleware('permission:view orders')->only('getAll');
+        $this->middleware('permission:view orders-admin')->only('getAllAdmin');
+        $this->middleware('permission:details order')->only('details');
+        $this->middleware('permission:basket order')->only('orderFromBasket');
+        $this->middleware('permission:buy-one order')->only('buyOne');
+        $this->middleware('permission:update order')->only('update');
+        $this->middleware('permission:delete order')->only('delete');
+        $this->middleware('permission:completed-orders')->only('completedOrders');
+        $this->middleware('permission:download-receipt')->only('downloadReceipt');
+        $this->middleware('permission:view-receipt')->only('getReceipt');
+
         $this->service = $service;
-        //       if (Module::find('Roles')->isEnabled()) {
-//            $this->middleware('permission:view orders')->only('index');
-//            $this->middleware('permission:create order')->only('create');
-//            $this->middleware('permission:store order')->only('store');
-//            $this->middleware('permission:edit order')->only('edit');
-//            $this->middleware('permission:update order')->only('update');
-//            $this->middleware('permission:destroy order')->only('destroy');
-//        }
     }
 
     public function getAll(Request $request): JsonResponse
@@ -66,10 +69,12 @@ class OrderController extends Controller
     {
         return $this->service->delete($id);
     }
+
     public function getReceipt(int $orderId): JsonResponse
     {
         return $this->service->getReceipt($orderId);
     }
+
     public function downloadReceipt(int $orderId)
     {
         return $this->service->downloadReceipt($orderId);

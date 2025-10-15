@@ -15,11 +15,11 @@ class BalanceController extends Controller
     {
         $this->service = $service;
 
-//        if (Module::find('Roles')->isEnabled()) {
-//            $this->middleware('permission:view balances')->only('getBalance', 'getBalanceHistory');
-//            $this->middleware('permission:create balance')->only('deposit');
-//            $this->middleware('permission:update balance')->only('withdraw');
-//        }
+        $this->middleware('permission:view balances')->only('getBalance', 'getBalanceHistory');
+        $this->middleware('permission:deposit balance')->only('deposit');
+        $this->middleware('permission:withdraw balance')->only('withdraw');
+        $this->middleware('permission:get-balance balance')->only('getBalance');
+        $this->middleware('permission:history balance')->only('getBalanceHistory');
     }
 
 

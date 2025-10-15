@@ -15,6 +15,8 @@ use Modules\HelpAndPolicy\Database\Seeders\HelpAndPolicyDatabaseSeeder;
 use Modules\Notification\Database\Seeders\NotificationDatabaseSeeder;
 use Modules\Product\Database\Seeders\ProductDatabaseSeeder;
 use Modules\PromoCode\Database\Seeders\PromoCodeDatabaseSeeder;
+use Modules\RoleAndPermissions\Database\Seeders\PermissionDatabaseSeeder;
+use Modules\RoleAndPermissions\Database\Seeders\RoleDatabaseSeeder;
 use Modules\Setting\Database\Seeders\SettingDatabaseSeeder;
 use Modules\Size\Database\Seeders\SizeDatabaseSeeder;
 use Modules\User\Database\Seeders\UserDatabaseSeeder;
@@ -33,6 +35,8 @@ class DatabaseSeeder extends Seeder
             BrandDatabaseSeeder::class,
             ColorDatabaseSeeder::class,
             SizeDatabaseSeeder::class,
+            RoleDatabaseSeeder::class,
+            PermissionDatabaseSeeder::class,
             UserDatabaseSeeder::class,
             ProductDatabaseSeeder::class,
             NotificationDatabaseSeeder::class,

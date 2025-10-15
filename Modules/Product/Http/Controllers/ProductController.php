@@ -17,14 +17,13 @@ class ProductController extends Controller
 
     public function __construct(ProductService $service)
     {
-//        if (Module::find('Roles')->isEnabled()) {
-//            $this->middleware('permission:view colors')->only('index');
-//            $this->middleware('permission:create color')->only('create');
-//            $this->middleware('permission:store color')->only('store');
-//            $this->middleware('permission:edit color')->only('edit');
-//            $this->middleware('permission:update color')->only('update');
-//            $this->middleware('permission:destroy color')->only('destroy');
-//        }
+        $this->middleware('permission:view products')->only('list');
+        $this->middleware('permission:add product')->only('add');
+        $this->middleware('permission:details product')->only('details');
+        $this->middleware('permission:update product')->only('update');
+        $this->middleware('permission:delete product')->only('delete');
+        $this->middleware('permission:statistics product')->only('statistics');
+        $this->middleware('permission:details-admin product')->only('detailsAdmin');
 
         $this->service = $service;
     }
@@ -53,6 +52,7 @@ class ProductController extends Controller
     {
         return $this->service->details($id);
     }
+
     public function detailsAdmin(int $id)
     {
         return $this->service->detailsAdmin($id);

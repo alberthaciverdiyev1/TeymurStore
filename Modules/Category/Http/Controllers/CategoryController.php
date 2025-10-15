@@ -17,14 +17,12 @@ class CategoryController extends Controller
 
     public function __construct(CategoryService $service)
     {
-//        if (Module::find('Roles')->isEnabled()) {
-//            $this->middleware('permission:view categorys')->only('index');
-//            $this->middleware('permission:create category')->only('create');
-//            $this->middleware('permission:store category')->only('store');
-//            $this->middleware('permission:edit category')->only('edit');
-//            $this->middleware('permission:update category')->only('update');
-//            $this->middleware('permission:destroy category')->only('destroy');
-//        }
+        $this->middleware('permission:view categories')->only('list');
+        $this->middleware('permission:view categories-with-products')->only('listWithProducts');
+        $this->middleware('permission:add category')->only('add');
+        $this->middleware('permission:details category')->only('details');
+        $this->middleware('permission:update category')->only('update');
+        $this->middleware('permission:delete category')->only('delete');
 
         $this->service = $service;
     }
@@ -37,6 +35,7 @@ class CategoryController extends Controller
     {
         return $this->service->list($request);
     }
+
     public function listWithProducts(Request $request)
     {
         return $this->service->listWithProducts($request);

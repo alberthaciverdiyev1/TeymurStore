@@ -12,6 +12,7 @@ class NotificationController extends Controller
 
     function __construct(NotificationService $service)
     {
+        $this->middleware('permission:view notifications')->only('getAll');
         $this->service = $service;
     }
 

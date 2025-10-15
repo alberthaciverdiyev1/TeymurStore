@@ -9,4 +9,5 @@ Route::controller(UserController::class)->middleware('auth:sanctum')->prefix('us
     Route::put('/change-phone', 'changePhone')->name('auth.changePhone');
     Route::get('/list', 'getAll')->name('user.list');
     Route::get('/details/{id?}', 'details')->name('user.details');
+    Route::delete('/delete', 'deleteMyAccount')->name('user.deleteMyAccount');
 });

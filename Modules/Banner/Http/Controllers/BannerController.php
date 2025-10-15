@@ -15,14 +15,9 @@ class BannerController extends Controller
 
     public function __construct(BannerService $bannerService)
     {
-//        if (Module::find('Roles')->isEnabled()) {
-//            $this->middleware('permission:view banners')->only('index');
-//            $this->middleware('permission:create banner')->only('create');
-//            $this->middleware('permission:store banner')->only('store');
-//            $this->middleware('permission:edit banner')->only('edit');
-//            $this->middleware('permission:update banner')->only('update');
-//            $this->middleware('permission:destroy banner')->only('destroy');
-//        }
+            $this->middleware('permission:view banners')->only('getAll');
+            $this->middleware('permission:add banner')->only('add');
+            $this->middleware('permission:delete banner')->only('delete');
 
         $this->bannerService = $bannerService;
     }

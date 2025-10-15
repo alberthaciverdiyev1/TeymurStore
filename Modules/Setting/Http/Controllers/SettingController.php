@@ -16,14 +16,8 @@ class SettingController extends Controller
 
     public function __construct(SettingService $service)
     {
-//        if (Module::find('Roles')->isEnabled()) {
-//            $this->middleware('permission:view colors')->only('index');
-//            $this->middleware('permission:create color')->only('create');
-//            $this->middleware('permission:store color')->only('store');
-//            $this->middleware('permission:edit color')->only('edit');
-//            $this->middleware('permission:update color')->only('update');
-//            $this->middleware('permission:destroy color')->only('destroy');
-//        }
+        $this->middleware('permission:view setting')->only('list');
+        $this->middleware('permission:update setting')->only('update');
 
         $this->service = $service;
     }

@@ -125,4 +125,23 @@ class UserService
         ]);
     }
 
+    public function deleteMyAccount(): JsonResponse
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return responseHelper('User not authenticated', 401);
+        }
+
+        try {
+            $user->tokens()->delete();
+
+            $user->delete();
+            return responseHelper('User deleted successfully', 200);
+
+        } catch (\Exception $e) {
+            \Log::error('Error deleting user: ' . $e->getMessage());
+            return responseHelper('Failed to delete user', 500);
+        }
+    }
 }

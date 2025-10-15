@@ -15,14 +15,11 @@ class DeliveryController extends Controller
 
     public function __construct(DeliveryService $service)
     {
-//        if (Module::find('Roles')->isEnabled()) {
-//            $this->middleware('permission:view deliveries')->only('index');
-//            $this->middleware('permission:create delivery')->only('create');
-//            $this->middleware('permission:store delivery')->only('store');
-//            $this->middleware('permission:edit delivery')->only('edit');
-//            $this->middleware('permission:update delivery')->only('update');
-//            $this->middleware('permission:destroy delivery')->only('destroy');
-//        }
+        $this->middleware('permission:view deliveries')->only('list');
+        $this->middleware('permission:add delivery')->only('add');
+        $this->middleware('permission:details delivery')->only('details');
+        $this->middleware('permission:update delivery')->only('update');
+        $this->middleware('permission:delete delivery')->only('delete');
 
         $this->service = $service;
     }

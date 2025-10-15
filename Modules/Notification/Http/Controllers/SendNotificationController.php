@@ -15,14 +15,8 @@ class SendNotificationController extends Controller
 
     public function __construct(SendNotificationService $service)
     {
-        // if (Module::find('Roles')->isEnabled()) {
-        //     $this->middleware('permission:view notifications')->only('index');
-        //     $this->middleware('permission:create notification')->only('create');
-        //     $this->middleware('permission:store notification')->only('store');
-        //     $this->middleware('permission:edit notification')->only('edit');
-        //     $this->middleware('permission:update notification')->only('update');
-        //     $this->middleware('permission:destroy notification')->only('destroy');
-        // }
+             $this->middleware('permission:send notification')->only('sendNotification');
+
 
         $this->service = $service;
     }

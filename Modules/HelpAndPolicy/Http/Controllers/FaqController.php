@@ -3,16 +3,22 @@
 namespace Modules\HelpAndPolicy\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
 use Modules\HelpAndPolicy\Http\Requests\Faq\FaqAddRequest;
 use Modules\HelpAndPolicy\Http\Requests\Faq\FaqUpdateRequest;
 use Modules\HelpAndPolicy\Services\FaqService;
 
-class FaqController
+class FaqController extends Controller
 {
     private FaqService $service;
 
     function __construct(FaqService $service)
     {
+        $this->middleware('permission:view faqs')->only('getAll');
+        $this->middleware('permission:add faq')->only('add');
+        $this->middleware('permission:update faq')->only('update');
+        $this->middleware('permission:delete faq')->only('delete');
+
         $this->service = $service;
     }
 

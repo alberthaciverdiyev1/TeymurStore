@@ -17,14 +17,11 @@ class BrandController extends Controller
 
     public function __construct(BrandService $service)
     {
-//        if (Module::find('Roles')->isEnabled()) {
-//            $this->middleware('permission:view categorys')->only('index');
-//            $this->middleware('permission:create category')->only('create');
-//            $this->middleware('permission:store category')->only('store');
-//            $this->middleware('permission:edit category')->only('edit');
-//            $this->middleware('permission:update category')->only('update');
-//            $this->middleware('permission:destroy category')->only('destroy');
-//        }
+            $this->middleware('permission:view brands')->only('list');
+            $this->middleware('permission:add brand')->only('add');
+            $this->middleware('permission:details brand')->only('details');
+            $this->middleware('permission:update brand')->only('update');
+            $this->middleware('permission:delete brand')->only('delete');
 
         $this->service = $service;
     }

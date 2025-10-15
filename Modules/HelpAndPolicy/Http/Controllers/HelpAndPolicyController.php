@@ -12,14 +12,12 @@ class HelpAndPolicyController extends Controller
 
     public function __construct()
     {
-        if (Module::find('Roles')->isEnabled()) {
             $this->middleware('permission:view helpandpolicys')->only('index');
             $this->middleware('permission:create helpandpolicy')->only('create');
             $this->middleware('permission:store helpandpolicy')->only('store');
             $this->middleware('permission:edit helpandpolicy')->only('edit');
             $this->middleware('permission:update helpandpolicy')->only('update');
             $this->middleware('permission:destroy helpandpolicy')->only('destroy');
-        }
     }
 
 

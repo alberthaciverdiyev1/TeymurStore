@@ -161,6 +161,8 @@ class AuthService
             'email_verified_at' => \now()
         ]);
 
+        $user->assignRole('user');
+
         $otpCheck->delete();
 
         $token = $user->createToken('auth_token')->plainTextToken;

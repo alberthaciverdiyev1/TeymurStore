@@ -17,14 +17,13 @@ class PromoCodeController extends Controller
 
     public function __construct(PromoCodeService $service)
     {
-//        if (Module::find('Roles')->isEnabled()) {
-//            $this->middleware('permission:view colors')->only('index');
-//            $this->middleware('permission:create color')->only('create');
-//            $this->middleware('permission:store color')->only('store');
-//            $this->middleware('permission:edit color')->only('edit');
-//            $this->middleware('permission:update color')->only('update');
-//            $this->middleware('permission:destroy color')->only('destroy');
-//        }
+        $this->middleware('permission:view promo-codes')->only('getAll');
+        $this->middleware('permission:check promo-code')->only('check');
+        $this->middleware('permission:add promo-code')->only('add');
+        $this->middleware('permission:details promo-code')->only('details');
+        $this->middleware('permission:update promo-code')->only('update');
+        $this->middleware('permission:delete promo-code')->only('delete');
+        $this->middleware('permission:check-promo-code-with-price')->only('checkPromoCodeWithPrice');
 
         $this->service = $service;
     }
