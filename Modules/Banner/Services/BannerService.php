@@ -15,9 +15,11 @@ class BannerService
     }
     public function getAll($request): array|\Illuminate\Http\JsonResponse
     {
-        $query = $this->model::query()->latest()->get();
-
-        $banners = $query;
+        $query = $this->model::query();
+        if ($request->has('type')) {
+            $query->where('type', $request->type);
+        }
+        $banners = $query->get();
 
         return responseHelper('Banners retrieved successfully', 200, BannerResource::collection($banners));
     }
@@ -29,10 +31,14 @@ class BannerService
         if (empty($params['image'])) {
             return responseHelper('Image is required', 400);
         }
+        if (empty($params['type'])) {
+            return responseHelper('Type is required', 400);
+        }
 
         return handleTransaction(function () use ($params) {
             $this->model::create([
                 'image' => $params['image'],
+                'type' => $params['type'],
             ]);
 
             return responseHelper('Banner added successfully', 200);
