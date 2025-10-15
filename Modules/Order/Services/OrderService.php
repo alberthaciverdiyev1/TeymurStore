@@ -660,8 +660,7 @@ class OrderService
         }
     }
 
-    public
-    function getReceipt(int $orderId): JsonResponse
+    public function getReceipt(int $orderId): JsonResponse
     {
         try {
             $order = Order::with(['items.product', 'address'])
@@ -706,8 +705,81 @@ class OrderService
     }
 
 
-    public
-    function downloadReceipt(int $orderId)
+//    public function downloadReceipt(int $orderId)
+//    {
+//        try {
+//            $user = auth()->user();
+//
+//            $order = Order::with(['items.product', 'address'])
+//                ->where('id', $orderId)
+//                ->where('user_id', $user->id)
+//                ->first();
+//
+//            if (!$order) {
+//                return responseHelper('Order not found.', 404);
+//            }
+//
+//            $usedPromo = \DB::table('used_promo_codes')
+//                ->where('user_id', $user->id)
+//                ->where('order_id', $order->id)
+//                ->first();
+//
+//            $promoData = null;
+//            if ($usedPromo) {
+//                $promo = \Modules\PromoCode\Http\Entities\PromoCode::find($usedPromo->promo_code_id);
+//                if ($promo) {
+//                    $promoData = [
+//                        'code' => $promo->code,
+//                        'discount_percent' => $promo->discount_percent,
+//                    ];
+//                }
+//            }
+//
+//            $orderSummary = [
+//                'order_id' => $order->id,
+//                'transaction_id' => $order->transaction_id,
+//                'order_time' => $order->created_at->format('Y-m-d H:i:s'),
+//                'items_totals' => $order->items->sum(fn($item) => $item->total_price),
+//                'items_discounts' => $order->discount_price ?? 0,
+//                'shipping' => $order->shipping_price ?? 0,
+//                'total' => ($order->total_price + ($order->shipping_price ?? 0)) - ($order->discount_price ?? 0),
+//                'promo' => $promoData,
+//            ];
+//
+//            $pickup = [
+//                'city' => $order->address->city ?? null,
+//                'town' => $order->address->town_village_district ?? null,
+//                'street' => $order->address->street_building_number ?? null,
+//                'apartment' => $order->address->unit_floor_apartment ?? null,
+//                'phone' => $order->address->contact_number ?? $user->phone,
+//            ];
+//
+//            foreach ($order->items as $item) {
+//                $item->product_title = mb_convert_encoding(
+//                    $item->product->getTranslation('title', app()->getLocale()),
+//                    'UTF-8', 'UTF-8'
+//                );
+//            }
+//
+//            $htmlContent = receiptPdf($order, $pickup, $orderSummary);
+//
+//            $pdf = Pdf::loadHTML($htmlContent);
+//            $filename = "receipt_order_{$order->transaction_id}.pdf";
+//
+//            return $pdf->download($filename);
+//
+//        } catch (\Throwable $e) {
+//            \Log::error('Receipt PDF generation failed', [
+//                'user_id' => $user->id ?? null,
+//                'error' => $e->getMessage(),
+//                'trace' => $e->getTraceAsString(),
+//            ]);
+//
+//            return responseHelper('Something went wrong while generating the receipt PDF.', 500);
+//        }
+//    }
+
+    public function downloadReceipt(int $orderId)
     {
         try {
             $user = auth()->user();
@@ -766,9 +838,24 @@ class OrderService
             $htmlContent = receiptPdf($order, $pickup, $orderSummary);
 
             $pdf = Pdf::loadHTML($htmlContent);
-            $filename = "receipt_order_{$order->transaction_id}.pdf";
 
-            return $pdf->download($filename);
+            $filename = "receipt_order_{$order->transaction_id}.pdf";
+            $path = storage_path("app/public/receipts/{$filename}");
+
+            // Klasör yoksa oluştur
+            if (!file_exists(dirname($path))) {
+                mkdir(dirname($path), 0755, true);
+            }
+
+            $pdf->save($path);
+
+            // Kullanıcıya erişim linki dön
+            $link = asset("storage/receipts/{$filename}");
+
+            return response()->json([
+                'success' => true,
+                'file_link' => $link
+            ]);
 
         } catch (\Throwable $e) {
             \Log::error('Receipt PDF generation failed', [
@@ -780,5 +867,6 @@ class OrderService
             return responseHelper('Something went wrong while generating the receipt PDF.', 500);
         }
     }
+
 
 }
