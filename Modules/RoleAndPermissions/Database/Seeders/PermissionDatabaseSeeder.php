@@ -134,6 +134,14 @@ class PermissionDatabaseSeeder extends Seeder
             'name' => 'admin',
             'guard_name' => $this->guard,
         ]);
+        $userRole = Role::firstOrCreate([
+            'name' => 'user',
+            'guard_name' => $this->guard,
+        ]);
+        $managerRole = Role::firstOrCreate([
+            'name' => 'manager',
+            'guard_name' => $this->guard,
+        ]);
 
         foreach ($allPermissions as $group => $groupPermissions) {
             foreach ($groupPermissions as $permissionName) {
@@ -144,6 +152,8 @@ class PermissionDatabaseSeeder extends Seeder
 
                 $developerRole->givePermissionTo($permission);
                 $adminRole->givePermissionTo($permission);
+                $userRole->givePermissionTo($permission);
+                $managerRole->givePermissionTo($permission);
             }
         }
 
