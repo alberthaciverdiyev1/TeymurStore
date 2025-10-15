@@ -12,91 +12,30 @@ class PaymentController extends Controller
 
     public function __construct()
     {
-        if (Module::find('Roles')->isEnabled()) {
-            $this->middleware('permission:view payments')->only('index');
-            $this->middleware('permission:create payment')->only('create');
-            $this->middleware('permission:store payment')->only('store');
-            $this->middleware('permission:edit payment')->only('edit');
-            $this->middleware('permission:update payment')->only('update');
-            $this->middleware('permission:destroy payment')->only('destroy');
-        }
+//        if (Module::find('Roles')->isEnabled()) {
+//            $this->middleware('permission:view payments')->only('index');
+//            $this->middleware('permission:create payment')->only('create');
+//            $this->middleware('permission:store payment')->only('store');
+//            $this->middleware('permission:edit payment')->only('edit');
+//            $this->middleware('permission:update payment')->only('update');
+//            $this->middleware('permission:destroy payment')->only('destroy');
+//        }
     }
 
 
-    /**
-    * Display a listing of the resource.
-    */
-    public function index()
+    public function success()
     {
-        return view('payment::index');
+        return response()->json(['message' => 'Payment successful'], 200);
+
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function error()
     {
-        return view('payment::create');
+        return response()->json(['message' => 'Payment failed'], 500);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function result()
     {
-        try {
-
-            //TODO:STORE FUNCTIONS
-
-            return response()->json(__('Data successfully created!'));
-        } catch (Exception $e) {
-            return response()->json($e->getMessage());
-        }
-    }
-
-    /**
-     * Show the specified resource.
-     */
-    public function show()
-    {
-        return view('payment::show');
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit()
-    {
-        return view('payment::edit');
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request)
-    {
-        try {
-
-            //TODO:UPDATE FUNCTIONS
-
-            return response()->json(__('Data successfully updated!'));
-        } catch (Exception $e) {
-            return response()->json($e->getMessage());
-        }
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy()
-    {
-        try {
-
-            //TODO:DESTROY FUNCTIONS
-
-            return response()->json(__('Data successfully deleted!'));
-        } catch (Exception $e) {
-            return response()->json($e->getMessage());
-        }
+        return response()->json(['message' => 'Payment result'], 200);
     }
 }
