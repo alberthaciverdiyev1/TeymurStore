@@ -2,40 +2,99 @@
 
 namespace Modules\Payment\Http\Controllers;
 
-use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Nwidart\Modules\Facades\Module;
+use Illuminate\Support\Facades\Log;
+use Modules\Order\Http\Entities\Order;
+use Modules\Order\Http\Entities\OrderStatus;
+use App\Enums\OrderStatus as OrderStatusEnum;
 
 class PaymentController extends Controller
 {
-
-    public function __construct()
+    public function success(Request $request)
     {
-//        if (Module::find('Roles')->isEnabled()) {
-//            $this->middleware('permission:view payments')->only('index');
-//            $this->middleware('permission:create payment')->only('create');
-//            $this->middleware('permission:store payment')->only('store');
-//            $this->middleware('permission:edit payment')->only('edit');
-//            $this->middleware('permission:update payment')->only('update');
-//            $this->middleware('permission:destroy payment')->only('destroy');
-//        }
+        $transactionId = $request->query('transaction_id');
+
+        $order = Order::where('transaction_id', $transactionId)->first();
+
+        if (!$order) {
+            return responseHelper('Order not found', 404);
+        }
+
+        if (!$order->paid_at) {
+            $order->update(['paid_at' => now()]);
+
+            handleTransaction(fn() => OrderStatus::create([
+                'order_id' => $order->id,
+                'status' => OrderStatusEnum::PLACED,
+            ]));
+        }
+
+        return responseHelper('Payment successful', 200, [
+            'order_id' => $order->id,
+            'status' => OrderStatusEnum::PLACED
+        ]);
     }
 
-
-    public function success()
+    public function error(Request $request)
     {
-        return response()->json(['message' => 'Payment successful'], 200);
+        $transactionId = $request->query('transaction_id');
 
+        $order = Order::where('transaction_id', $transactionId)->first();
+
+        if (!$order) {
+            return responseHelper('Order not found', 404);
+        }
+
+        handleTransaction(fn() => OrderStatus::create([
+            'order_id' => $order->id,
+            'status' => OrderStatusEnum::FAILED,
+        ]));
+
+        return responseHelper('Payment failed', 500, [
+            'order_id' => $order->id,
+            'status' => OrderStatusEnum::FAILED
+        ]);
     }
 
-    public function error()
+    public function result(Request $request)
     {
-        return response()->json(['message' => 'Payment failed'], 500);
-    }
+        try {
+            $transactionId = $request->input('transaction_id');
+            $paymentStatus = $request->input('status');
 
-    public function result()
-    {
-        return response()->json(['message' => 'Payment result'], 200);
+            $order = Order::where('transaction_id', $transactionId)->first();
+
+            if (!$order) {
+                return responseHelper('Order not found', 404);
+            }
+
+            if ($paymentStatus === 'success') {
+                if (!$order->paid_at) {
+                    $order->update(['paid_at' => now()]);
+                }
+
+                handleTransaction(fn() => OrderStatus::create([
+                    'order_id' => $order->id,
+                    'status' => OrderStatusEnum::PLACED,
+                ]));
+
+            } else {
+                handleTransaction(fn() => OrderStatus::create([
+                    'order_id' => $order->id,
+                    'status' => OrderStatusEnum::FAILED,
+                ]));
+            }
+
+            return responseHelper('Payment result recorded', 200);
+
+        } catch (\Throwable $e) {
+            Log::error('Payment webhook error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return responseHelper('Error processing payment result', 500);
+        }
     }
 }
