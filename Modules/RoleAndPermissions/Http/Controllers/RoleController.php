@@ -16,13 +16,7 @@ class RoleController extends Controller
     {
         $this->roleService = $roleService;
 
-        $this->middleware('permission:view roles-and-permissions')->only('getAll');
-        $this->middleware('permission:add role')->only('store');
-        $this->middleware('permission:details role')->only('show');
-        $this->middleware('permission:update role')->only('update');
-        $this->middleware('permission:delete role')->only('delete');
-        $this->middleware('permission:give-role-to-user')->only('assignRoleToUser');
-        $this->middleware('permission:revoke-role-from-user')->only('revokeRoleFromUser');
+        $this->middleware('permission:manage-roles');
     }
 
     public function getAll()
@@ -47,10 +41,11 @@ class RoleController extends Controller
         return $this->roleService->update($role, $request->name);
     }
 
-    public function delete(Role $role)
+    public function delete(Role $role, RoleService $roleService)
     {
-        return $this->roleService->delete($role);
+        return $roleService->delete($role->id);
     }
+
 
     public function assignRoleToUser(Request $request, $userId)
     {
@@ -77,5 +72,11 @@ class RoleController extends Controller
     {
         $request->validate(['permission' => 'required|string']);
         return $this->roleService->revokePermission($role, $request->permission);
+    }
+
+    public function getUsersWithRole()
+    {
+        return $this->roleService->getUsersWithRole();
+
     }
 }

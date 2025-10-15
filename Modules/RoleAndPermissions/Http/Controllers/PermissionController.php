@@ -16,11 +16,7 @@ class PermissionController extends Controller
     {
         $this->permissionService = $permissionService;
 
-        $this->middleware('permission:view roles-and-permissions')->only('getAll');
-        $this->middleware('permission:add permission')->only('store');
-        $this->middleware('permission:details permission')->only('show');
-        $this->middleware('permission:update permission')->only('update');
-        $this->middleware('permission:delete permission')->only('delete');
+        $this->middleware('permission:manage-permissions');
     }
 
     public function getAll()

@@ -119,11 +119,20 @@ class UserService
             ], 404);
         }
 
+        $roles = $user->roles->map(function ($role) {
+            return [
+                'name' => $role->name,
+                'permissions' => $role->permissions->pluck('name'),
+            ];
+        });
+
         return response()->json([
             'success' => true,
             'user' => UserResource::make($user),
+            'roles' => $roles
         ]);
     }
+
 
     public function deleteMyAccount(): JsonResponse
     {

@@ -2,9 +2,10 @@
 
 namespace Modules\RoleAndPermissions\Services;
 
+use Exception;
+use Modules\User\Http\Entities\User;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
-use App\Models\User;
 
 class RoleService
 {
@@ -43,24 +44,39 @@ class RoleService
         return responseHelper('Role updated successfully.', 200, $role);
     }
 
-    public function delete(Role $role)
+    public function delete(int $roleId): array
     {
+        $role = Role::find($roleId);
+
         if (!$role) {
-            return responseHelper('Role not found.', 404);
+            return [
+                'success' => false,
+                'status_code' => 404,
+                'message' => 'Role not found.',
+                'data' => null
+            ];
         }
 
         try {
-            $role->users()->detach();
             $role->permissions()->detach();
 
             $role->delete();
 
-            return responseHelper('Role deleted successfully.', 200);
-        } catch (\Exception $e) {
-            return responseHelper('Failed to delete role: ' . $e->getMessage(), 500);
+            return [
+                'success' => true,
+                'status_code' => 200,
+                'message' => 'Role deleted successfully.',
+                'data' => null
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'status_code' => 500,
+                'message' => 'Failed to delete role: ' . $e->getMessage(),
+                'data' => null
+            ];
         }
     }
-
 
     public function givePermission(Role $role, string|Permission $permission)
     {
@@ -122,4 +138,10 @@ class RoleService
 
         return responseHelper('Role removed from user successfully.', 200, $user->roles);
     }
+
+    public function getUsersWithRole()
+    {
+        return User::with('roles')->get();
+    }
+
 }

@@ -104,13 +104,8 @@ class PermissionDatabaseSeeder extends Seeder
                 'check-promo-code-with-price',
             ],
             'roles-and-permissions' => [
-                'view roles-and-permissions',
-                'add role',
-                'details role',
-                'update role',
-                'delete role',
-                'give-role-to-user',
-                'revoke-role-from-user',
+                'manage-permissions',
+                'manage-roles',
             ],
             'settings' => [
                 'view setting',

@@ -30,12 +30,12 @@ Route::prefix('role')->middleware('auth:sanctum')->group(function () {
 | Permission Routes
 |--------------------------------------------------------------------------
 */
-Route::prefix('permissions')->middleware('auth:sanctum')->group(function () {
-    Route::get('/', [PermissionController::class, 'getAll']);        // Tüm izinler
-    Route::post('/', [PermissionController::class, 'store']);        // İzin oluştur
-    Route::get('/{id}', [PermissionController::class, 'show']);      // İzin detay
-    Route::put('/{permission}', [PermissionController::class, 'update']); // İzin güncelle
-    Route::delete('/{permission}', [PermissionController::class, 'delete']); // İzin sil
+Route::prefix('permission')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [PermissionController::class, 'getAll']);
+    Route::post('/', [PermissionController::class, 'store']);
+    Route::get('/{id}', [PermissionController::class, 'show']);
+    Route::put('/{permission}', [PermissionController::class, 'update']);
+    Route::delete('/{permission}', [PermissionController::class, 'delete']);
 });
 
 
