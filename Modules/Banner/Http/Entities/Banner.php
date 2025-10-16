@@ -14,6 +14,7 @@ class Banner extends Model
 
     protected $fillable = [
         'image',
+        'type',
         'is_active'
     ];
 

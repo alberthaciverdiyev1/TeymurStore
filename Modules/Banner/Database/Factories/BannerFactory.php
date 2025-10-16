@@ -16,11 +16,12 @@ class BannerFactory extends Factory
             'https://www.autoshippers.co.uk/blog/wp-content/uploads/1963-ferrari-250-gto-1024x523.jpg',
             'https://www.autoshippers.co.uk/blog/wp-content/uploads/lamborghini-veneno-roadster.jpg',
             'https://www.autoshippers.co.uk/blog/wp-content/uploads/koenigsegg-ccxr-trevita.jpg'
-
         ];
+        $types = ['home', 'favorite', 'basket'];
 
         return [
             'image' => $images[array_rand($images)],
+            'type' => $types[array_rand($types)]
         ];
     }
 }

@@ -15,8 +15,8 @@ class PermissionDatabaseSeeder extends Seeder
         $allPermissions = [
             'banner' => [
                 'view banners',
-                'add banners',
-                'delete banners',
+                'add banner',
+                'delete banner',
             ],
             'brands' => [
                 'view brands',

@@ -35,15 +35,23 @@ class BannerService
             return responseHelper('Type is required', 400);
         }
 
-        return handleTransaction(function () use ($params) {
+        return handleTransaction(function () use ($params, $request) {
+            if ($request->hasFile('image')) {
+                $file = $request->file('image');
+                $path = $file->store('banner', 'public');
+            } else {
+                return responseHelper('Invalid image file', 400);
+            }
+
             $this->model::create([
-                'image' => $params['image'],
+                'image' => $path,
                 'type' => $params['type'],
             ]);
 
             return responseHelper('Banner added successfully', 200);
         }, 'Error occurred while adding banner');
     }
+
 
     public function delete($id)
     {
