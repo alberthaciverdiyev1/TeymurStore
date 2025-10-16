@@ -67,7 +67,7 @@ class BrandService
             return responseHelper('Brand details retrieved successfully.',200, BrandResource::make($brand));
 
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return responseHelper('Brand not found.',404, []);
+            return responseHelper('Brand not found.',403, []);
         }
     }
 

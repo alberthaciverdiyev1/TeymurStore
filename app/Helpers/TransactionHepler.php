@@ -35,7 +35,7 @@ if (!function_exists('handleTransaction')) {
 
             $errorResponse = [
                 'success' => false,
-                'status_code' => 500,
+                'status_code' => 403,
                 'message' => __('Operation failed.'),
                 'error' => $e->getMessage(),
             ];

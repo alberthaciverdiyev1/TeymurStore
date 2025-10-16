@@ -139,7 +139,7 @@ class UserService
         $user = Auth::user();
 
         if (!$user) {
-            return responseHelper('User not authenticated', 401);
+            return responseHelper('User not authenticated', 403);
         }
 
         try {
@@ -150,7 +150,7 @@ class UserService
 
         } catch (\Exception $e) {
             \Log::error('Error deleting user: ' . $e->getMessage());
-            return responseHelper('Failed to delete user', 500);
+            return responseHelper('Failed to delete user', 403);
         }
     }
 }

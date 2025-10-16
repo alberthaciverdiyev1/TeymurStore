@@ -249,7 +249,7 @@ class OrderService
                 ->first();
 
             if (!$address) {
-                return responseHelper('Please set a valid default address with a city before placing an order.', 400);
+                return responseHelper('Please set a valid default address with a city before placing an order.', 403);
             }
 
             $deliveryResponse = $this->deliveryService
@@ -258,7 +258,7 @@ class OrderService
 
             $delivery = $deliveryResponse['data'] ?? null;
             if (!$delivery) {
-                return responseHelper('Delivery service is not available for your city.', 400);
+                return responseHelper('Delivery service is not available for your city.', 403);
             }
 
             $basket = Basket::with('product')
@@ -267,27 +267,27 @@ class OrderService
                 ->get();
 
             if ($basket->isEmpty()) {
-                return responseHelper('Your basket is empty.', 400);
+                return responseHelper('Your basket is empty.', 403);
             }
 
             foreach ($basket as $item) {
                 $product = $item->product;
-                if (!$product) return responseHelper('Product not found.', 404);
+                if (!$product) return responseHelper('Product not found.', 403);
 
                 $title = is_array($product->title)
                     ? ($product->title['az'] ?? reset($product->title))
                     : $product->title;
 
                 if ($item->color_id && !$product->colors()->where('color_id', $item->color_id)->exists()) {
-                    return responseHelper("Selected color is not available for product: {$title}", 400);
+                    return responseHelper("Selected color is not available for product: {$title}", 403);
                 }
 
                 if ($item->size_id && !$product->sizes()->where('size_id', $item->size_id)->exists()) {
-                    return responseHelper("Selected size is not available for product: {$title}", 400);
+                    return responseHelper("Selected size is not available for product: {$title}", 403);
                 }
 
                 if ($product->stock_count < $item->quantity) {
-                    return responseHelper("Insufficient stock for product: {$title}", 400);
+                    return responseHelper("Insufficient stock for product: {$title}", 403);
                 }
             }
 
@@ -334,7 +334,7 @@ class OrderService
                 $userBalance = $this->balanceService->getBalance()->getData(true)['data']['balance'] ?? 0;
 
                 if ($userBalance < ($validated['total_price'] + $validated['shipping_price'])) {
-                    return responseHelper('Insufficient balance to complete the order.', 400);
+                    return responseHelper('Insufficient balance to complete the order.', 403);
                 }
 
                 $balanceResponse = $this->balanceService->withdraw(
@@ -346,7 +346,7 @@ class OrderService
                 $balanceContent = $balanceResponse->getData(true);
 
                 if (!($balanceContent['success'] && $balanceContent['status_code'] === 201)) {
-                    return responseHelper('Failed to process payment from balance. Please try again.', 500);
+                    return responseHelper('Failed to process payment from balance. Please try again.', 403);
                 }
                 $validated['paid_at'] = now();
             }
@@ -426,7 +426,7 @@ class OrderService
                 'trace' => collect($e->getTrace())->take(10)->toArray(),
             ]);
 
-            return responseHelper('Something went wrong while placing the order.', 500, [
+            return responseHelper('Something went wrong while placing the order.', 403, [
                 'payment_url' => '',
             ]);
         }
@@ -453,7 +453,7 @@ class OrderService
                 ->first();
 
             if (!$address) {
-                return responseHelper('Please set a valid default address with a city before placing an order.', 400);
+                return responseHelper('Please set a valid default address with a city before placing an order.', 403);
             }
 
             $deliveryResponse = $this->deliveryService
@@ -463,21 +463,21 @@ class OrderService
             $delivery = $deliveryResponse['data'] ?? null;
 
             if (!$delivery) {
-                return responseHelper('Delivery service is not available for your city.', 400);
+                return responseHelper('Delivery service is not available for your city.', 403);
             }
 
             $product = Product::findOrFail($product_id);
 
             if ($color_id && !$product->colors()->where('color_id', $color_id)->exists()) {
-                return responseHelper('Selected color is not available for this product.', 400);
+                return responseHelper('Selected color is not available for this product.', 403);
             }
 
             if ($size_id && !$product->sizes()->where('size_id', $size_id)->exists()) {
-                return responseHelper('Selected size is not available for this product.', 400);
+                return responseHelper('Selected size is not available for this product.', 403);
             }
 
             if ($product->stock_count < 1) {
-                return responseHelper("Insufficient stock for product: {$product->title['az']}", 400);
+                return responseHelper("Insufficient stock for product: {$product->title['az']}", 403);
             }
 
             $validated['address_id'] = $address->id;
@@ -497,7 +497,7 @@ class OrderService
             if (!empty($validated['promo_code'])) {
 
                 if ($product->discount && $product->discount > 0) {
-                    return responseHelper('Promo codes cannot be applied to already discounted products.', 400);
+                    return responseHelper('Promo codes cannot be applied to already discounted products.', 403);
                 }
 
                 $response = $this->promoCodeService->check($validated['promo_code'], true);
@@ -526,7 +526,7 @@ class OrderService
                 $userBalance = $this->balanceService->getBalance()->getData(true)['data']['balance'] ?? 0;
 
                 if ($userBalance < ($validated['total_price'] + $validated['shipping_price'])) {
-                    return responseHelper('Insufficient balance to complete the order.', 400);
+                    return responseHelper('Insufficient balance to complete the order.', 403);
                 }
 
                 $balanceResponse = $this->balanceService->withdraw(
@@ -538,7 +538,7 @@ class OrderService
                 $balanceContent = $balanceResponse->getData(true);
 
                 if ($balanceContent['success'] && $balanceContent['status_code'] !== 201) {
-                    return responseHelper('Failed to process payment from balance. Please try again.', 500);
+                    return responseHelper('Failed to process payment from balance. Please try again.', 403);
                 }
                 unset($validated['pay_with_balance']);
             } else {
@@ -615,12 +615,11 @@ class OrderService
                 'error' => $e->getMessage(),
             ]);
 
-            return responseHelper('Something went wrong while placing the order.', 500);
+            return responseHelper('Something went wrong while placing the order.', 403);
         }
     }
 
-    public
-    function update(int $id, $request): JsonResponse
+    public function update(int $id, $request): JsonResponse
     {
         try {
             $data = $request->validated();
@@ -641,8 +640,7 @@ class OrderService
         }
     }
 
-    public
-    function delete(int $id): JsonResponse
+    public function delete(int $id): JsonResponse
     {
         try {
             $order = $this->model
@@ -670,7 +668,7 @@ class OrderService
                 ->first();
 
             if (!$order) {
-                return responseHelper('Order not found.', 404);
+                return responseHelper('Order not found.', 403);
             }
 
             $orderSummary = [
@@ -701,7 +699,7 @@ class OrderService
                 'error' => $e->getMessage(),
             ]);
 
-            return responseHelper('Something went wrong while generating the receipt.', 500);
+            return responseHelper('Something went wrong while generating the receipt.', 403);
         }
     }
 
@@ -717,7 +715,7 @@ class OrderService
                 ->first();
 
             if (!$order) {
-                return responseHelper('Order not found.', 404);
+                return responseHelper('Order not found.', 403);
             }
 
             $usedPromo = \DB::table('used_promo_codes')
@@ -789,7 +787,7 @@ class OrderService
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            return responseHelper('Something went wrong while generating the receipt PDF.', 500);
+            return responseHelper('Something went wrong while generating the receipt PDF.', 403);
         }
     }
 

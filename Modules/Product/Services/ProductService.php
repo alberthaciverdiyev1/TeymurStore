@@ -134,7 +134,7 @@ class ProductService
             return responseHelper('Product details retrieved successfully.', 200, $data);
 
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return responseHelper('Product not found.', 404, []);
+            return responseHelper('Product not found.', 403, []);
         }
     }
 

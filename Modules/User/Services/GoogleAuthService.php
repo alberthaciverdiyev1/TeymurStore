@@ -49,7 +49,7 @@ class GoogleAuthService
         $payload = $client->verifyIdToken($idToken);
 
         if (!$payload) {
-            return response()->json(['error' => 'Invalid Google ID Token'], 401);
+            return response()->json(['error' => 'Invalid Google ID Token'], 403);
         }
 
         $password = bcrypt(Str::random(16));

@@ -68,7 +68,7 @@ class ColorService
             return responseHelper('Colors retrieved successfully.', 200, ColorResource::make($color));
 
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return responseHelper('Colors not found.', 404, []);
+            return responseHelper('Colors not found.', 403, []);
         }
     }
 

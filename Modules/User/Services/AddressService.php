@@ -37,7 +37,7 @@ class AddressService implements ICrudInterface
             return responseHelper('Address retrieved successfully.', 200, new AddressResource($address));
 
         } catch (ModelNotFoundException $e) {
-            return responseHelper('Address not found.', 404,[]);
+            return responseHelper('Address not found.', 403,[]);
         }
     }
 
@@ -83,7 +83,7 @@ class AddressService implements ICrudInterface
             }, 'Address updated successfully.', AddressResource::class);
 
         } catch (ModelNotFoundException $e) {
-            return responseHelper('Address not found.', 404,[]);
+            return responseHelper('Address not found.', 403,[]);
         }
     }
 
@@ -99,7 +99,7 @@ class AddressService implements ICrudInterface
                 'Address deleted successfully.'
             );
         } catch (ModelNotFoundException $e) {
-            return responseHelper('Address not found.', 404,[]);
+            return responseHelper('Address not found.', 403,[]);
         }
     }
 }

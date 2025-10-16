@@ -65,7 +65,7 @@ class PromoCodeService
 
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([
-                'success' => 404,
+                'success' => 403,
                 'message' => __('Promo Code not found.'),
                 'data' => [],
             ]);
@@ -83,21 +83,21 @@ class PromoCodeService
                 ->first();
 
             if (!$promoCode) {
-                return responseHelper('Promo Code not found.', 404, [], $inline_request);
+                return responseHelper('Promo Code not found.', 403, [], $inline_request);
             }
 
             if ($promoCode->user_count <= 0) {
-                return responseHelper('Promo Code usage limit reached.', 400, [], $inline_request);
+                return responseHelper('Promo Code usage limit reached.', 403, [], $inline_request);
             }
 
             if ($user->usedPromoCodes()->where('promo_code_id', $promoCode->id)->exists()) {
-                return responseHelper('You have already used this Promo Code.', 400, [], $inline_request);
+                return responseHelper('You have already used this Promo Code.', 403, [], $inline_request);
             }
 
             return responseHelper('Promo Code checked successfully.', 200, PromoCodeResource::make($promoCode), $inline_request);
 
         } catch (\Exception $e) {
-            return responseHelper('An error occurred.', 500, [], $inline_request);
+            return responseHelper('An error occurred.', 403, [], $inline_request);
         }
     }
 
@@ -112,15 +112,15 @@ class PromoCodeService
                 ->first();
 
             if (!$promoCode) {
-                return responseHelper('Promo code not found.', 404, []);
+                return responseHelper('Promo code not found.', 403, []);
             }
 
             if ($promoCode->user_count <= 0) {
-                return responseHelper('Promo code usage limit reached.', 400, []);
+                return responseHelper('Promo code usage limit reached.', 403, []);
             }
 
             if ($user->usedPromoCodes()->where('promo_code_id', $promoCode->id)->exists()) {
-                return responseHelper('You have already used this promo code.', 400, []);
+                return responseHelper('You have already used this promo code.', 403, []);
             }
 
             $basket = Basket::with('product')
@@ -129,7 +129,7 @@ class PromoCodeService
                 ->get();
 
             if ($basket->isEmpty()) {
-                return responseHelper('Your basket is empty.', 400, []);
+                return responseHelper('Your basket is empty.', 403, []);
             }
 
             $totalPrice = round(
@@ -154,7 +154,7 @@ class PromoCodeService
                 'error' => $e->getMessage(),
             ]);
 
-            return responseHelper('An unexpected error occurred.', 500, []);
+            return responseHelper('An unexpected error occurred.', 403, []);
         }
     }
 

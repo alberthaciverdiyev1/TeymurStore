@@ -115,7 +115,7 @@ class CategoryService
             return responseHelper('Category details retrieved successfully.',200, CategoryResource::make($category));
 
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return responseHelper('Category not found.',404, []);
+            return responseHelper('Category not found.',403, []);
         }
     }
 

@@ -49,7 +49,7 @@ class FavoriteService
 
         $product = $this->product->find($productId);
         if (!$product) {
-            return responseHelper('Product not found.', 404);
+            return responseHelper('Product not found.', 403);
         }
 
         $result = $user->favorites()->toggle([$product->id]);
@@ -69,7 +69,7 @@ class FavoriteService
         $product = $this->product->find($productId);
 
         if (!$product) {
-            return responseHelper('Product not found.', 404);
+            return responseHelper('Product not found.', 403);
         }
 
         if ($user->favorites()->where('product_id', $product->id)->exists()) {

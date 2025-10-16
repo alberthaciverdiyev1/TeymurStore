@@ -29,10 +29,10 @@ class BannerService
         $params = $request->all();
 
         if (empty($params['image'])) {
-            return responseHelper('Image is required', 400);
+            return responseHelper('Image is required', 403);
         }
         if (empty($params['type'])) {
-            return responseHelper('Type is required', 400);
+            return responseHelper('Type is required', 403);
         }
 
         return handleTransaction(function () use ($params, $request) {
@@ -40,7 +40,7 @@ class BannerService
                 $file = $request->file('image');
                 $path = $file->store('banner', 'public');
             } else {
-                return responseHelper('Invalid image file', 400);
+                return responseHelper('Invalid image file', 403);
             }
 
             $this->model::create([

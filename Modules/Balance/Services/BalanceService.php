@@ -60,7 +60,7 @@ class BalanceService
             ])->refresh(),
             'Balance withdrawn successfully.',
             BalanceResource::class,
-            201
+            200
         );
     }
 
@@ -78,14 +78,11 @@ class BalanceService
                 END
             "));
 
-        return response()->json([
-            'success' => 200,
-            'message' => 'User balance retrieved successfully.',
-            'data' => [
-                'user_id' => $userId,
-                'balance' => $totalBalance,
-            ]
+        return responseHelper('Balance retrieved successfully.',200,[
+            'user_id' => $userId,
+            'balance' => $totalBalance,
         ]);
+
     }
 
     public function getBalanceHistory(int $userId = null): JsonResponse

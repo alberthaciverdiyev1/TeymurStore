@@ -83,7 +83,7 @@ class BasketService implements ICrudInterface
         $product = Product::find($validated['product_id']);
 
         if (!$product) {
-            return responseHelper('Product not found.', 404);
+            return responseHelper('Product not found.', 403);
         }
 
         if (!$product->colors()->exists()) {
@@ -96,13 +96,13 @@ class BasketService implements ICrudInterface
 
         if (isset($validated['color_id']) && $product->colors()->exists()) {
             if (!$product->colors()->where('color_id', $validated['color_id'])->exists()) {
-                return responseHelper('Selected color is not available for this product.', 400);
+                return responseHelper('Selected color is not available for this product.', 403);
             }
         }
 
         if (isset($validated['size_id']) && $product->sizes()->exists()) {
             if (!$product->sizes()->where('size_id', $validated['size_id'])->exists()) {
-                return responseHelper('Selected size is not available for this product.', 400);
+                return responseHelper('Selected size is not available for this product.', 403);
             }
         }
 
@@ -136,7 +136,7 @@ class BasketService implements ICrudInterface
                 BasketResource::class
             );
         } catch (ModelNotFoundException $e) {
-            return responseHelper('Basket not found.', 404, []);
+            return responseHelper('Basket not found.', 403, []);
         }
     }
 
@@ -153,7 +153,7 @@ class BasketService implements ICrudInterface
                 'Basket deleted successfully.'
             );
         } catch (ModelNotFoundException $e) {
-            return responseHelper('Basket not found.', 404, []);
+            return responseHelper('Basket not found.', 403, []);
         }
     }
 }
