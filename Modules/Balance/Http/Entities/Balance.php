@@ -21,7 +21,7 @@ class Balance extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'user_id', 'amount', 'type',
+        'user_id', 'amount', 'type','note','transaction_e_point','transaction_order'
     ];
 
     /**

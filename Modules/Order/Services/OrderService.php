@@ -17,7 +17,7 @@ use Modules\Order\Http\Entities\OrderItem;
 use Modules\Order\Http\Entities\OrderStatus;
 use Modules\Order\Http\Resources\OrderDetailResource;
 use Modules\Order\Http\Resources\OrderResource;
-use Modules\Payment\Service\PaymentService;
+use Modules\Payment\Service\EPointService;
 use Modules\Product\Http\Entities\Product;
 use Modules\Product\Http\Resources\ProductResource;
 use Modules\PromoCode\Services\PromoCodeService;
@@ -31,9 +31,9 @@ class OrderService
     private DeliveryService $deliveryService;
     private BalanceService $balanceService;
     private PromoCodeService $promoCodeService;
-    private PaymentService $paymentService;
+    private EPointService $paymentService;
 
-    public function __construct(Order $model, DeliveryService $deliveryService, BalanceService $balanceService, PromoCodeService $promoCodeService, PaymentService $paymentService)
+    public function __construct(Order $model, DeliveryService $deliveryService, BalanceService $balanceService, PromoCodeService $promoCodeService, EPointService $paymentService)
     {
         $this->model = $model;
         $this->deliveryService = $deliveryService;
@@ -386,7 +386,7 @@ class OrderService
                     $product->decrement('stock_count', $item->quantity);
                     $product->increment('sales_count', $item->quantity);
                 }
-                Basket::destroy($basket->pluck('id')->toArray());
+              //  Basket::destroy($basket->pluck('id')->toArray());
 
                 if ($appliedPromoId) {
                     \DB::table('used_promo_codes')
@@ -396,17 +396,26 @@ class OrderService
                         ->update(['order_id' => $orderId]);
                 }
             }
+            $paymentUrl = '';
             if (!$pay_with_balance) {
-                return responseHelper('Order redirected to payment page.', 200, [
-                    'payment_url' => 'https://www.google.com',
-                    'pay_with_balance' => $pay_with_balance
-                ]);
+                $paymentResponse = EPointService::typeCard(
+                    env('EPOINT_PRIVATE_KEY'),
+                    env('EPOINT_PUBLIC_KEY'),
+                    $orderId,
+                    $validated['total_price'] + $validated['shipping_price'],
+                    "Payment for order #{$orderId}",
+                    route('api.payment.success', ['transaction_id' => $validated['transaction_id']]),
+                    route('api.payment.error', ['transaction_id' => $validated['transaction_id']])
+                );
+                $paymentUrl = $paymentResponse->redirect_url ?? '';
             }
 
-            return responseHelper('Order added successfully.', 200, [
-                'payment_url' => '',
+            return responseHelper($pay_with_balance ? 'Order added successfully.' : 'Order redirected to payment page.', 200, [
+                'payment_url' => $paymentUrl,
                 'pay_with_balance' => $pay_with_balance
             ]);
+
+
 
         } catch (\Throwable $e) {
             if ($appliedPromoId) {
@@ -659,12 +668,12 @@ class OrderService
         }
     }
 
-    public function getReceipt(int $orderId): JsonResponse
+    public function getReceipt(int $orderId,$userId = null,$message = null): JsonResponse
     {
         try {
             $order = Order::with(['items.product', 'address'])
                 ->where('id', $orderId)
-                ->where('user_id', auth()->id())
+                ->where('user_id', $userId ?? auth()->id())
                 ->first();
 
             if (!$order) {
@@ -688,7 +697,7 @@ class OrderService
                 'apartment' => $order->address->unit_floor_apartment ?? null,
                 'phone' => $order->address->contact_number ?? auth()->user()->phone,
             ];
-            return responseHelper('Order receipt generated successfully.', 200, [
+            return responseHelper($message ??'Order receipt generated successfully.', 200, [
                 'order_summary' => $orderSummary,
                 'pickup' => $pickup,
             ]);

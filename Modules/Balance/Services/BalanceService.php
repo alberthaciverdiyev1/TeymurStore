@@ -33,6 +33,20 @@ class BalanceService
             BalanceResource::class
         );
     }
+    public function callbackDeposit($userId,$amount,$note): JsonResponse
+    {
+        return handleTransaction(
+            fn() => $this->model->create([
+                'user_id' => $userId,
+                'type' => BalanceType::DEPOSIT->value,
+                'amount' => (float)$amount,
+                'note' => $note ?? null,
+            ])->refresh(),
+            'Balance deposited successfully.',
+            BalanceResource::class,
+            200
+        );
+    }
 
 //    public function withdraw(Request $request): JsonResponse
 //    {

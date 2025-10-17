@@ -2,404 +2,151 @@
 
 namespace Modules\Payment\Service;
 
-
-use GuzzleHttp\Client;
+use App\Enums\OrderStatus as OrderStatusEnum;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Modules\Balance\Services\BalanceService;
+use Modules\Order\Http\Entities\Order;
+use Modules\Order\Http\Entities\OrderStatus;
+use Modules\Order\Services\OrderService;
 
 class PaymentService
 {
+    private BalanceService $balanceService;
+    private OrderService $orderService;
 
-    public $epoint_transaction;
-    // the order id you give when processing, in order to find out for what the payment is made for
-    public $order_id;
-    // the id returned by Epoint after user save his/her hard in the system
-    public $card_uid;
-    // private key given by Epoint
-    public $private_key;
-    // public key given by Epoint
-    public $public_key;
-    // the amount of money
-    public $amount;
-    // currency, possible values AZN
-    public $currency = 'AZN';
-    // language, possible values az, en, ru
-    public $language = 'az';
-    // description for the payment
-    public $description;
-    // when operation is successful the url to redirect for
-    public $success_redirect_url;
-    // when operation failed the url to redirect for
-    public $error_redirect_url;
-
-    // these 2 variables are ues by callback webhook
-    public $signature;
-    public $data;
-
-    public $languages = ['az', 'en', 'ru','tr'];
-    // http client
-    public $client;
-    // http response
-    public $response;
-
-    public function __construct($data = [])
+    function __construct(BalanceService $balanceService, OrderService $orderService)
     {
-        if (!empty($data)) {
-            foreach ($data as $key => $value) {
-                $this->$key = $value;
+        $this->balanceService = $balanceService;
+        $this->orderService = $orderService;
+    }
+
+    public function success(Request $request)
+    {
+        $transactionId = $request->query('transaction_id');
+        // $transactionId = 'EAF4DDC6-5326-4EC9-A833-20EB2C87DC5E';
+
+        $order = Order::where('transaction_id', $transactionId)->first();
+        if (!$order) {
+            return responseHelper('Order not found', 403);
+        }
+        $userId = $order->user_id;
+
+        $response = EPointService::checkPayment(
+            env('EPOINT_PRIVATE_KEY'),
+            env('EPOINT_PUBLIC_KEY'),
+            $order->id
+        );
+
+        $success = isset($response->code) && (string)$response->code === '000';
+        $amountPaid = $response->amount ?? 0;
+
+        if ($success) {
+            if (!$order->paid_at) {
+                $order->update([
+                    'paid_at' => now(),
+                ]);
+
+                handleTransaction(fn() => OrderStatus::create([
+                    'order_id' => $order->id,
+                    'status' => OrderStatusEnum::PLACED,
+                ]));
+
+
+                $this->balanceService->callbackDeposit($userId, $amountPaid, "Added amount to balance for order: $order->id");
+                $this->balanceService->withdraw($userId, $amountPaid, "Removed amount to balance for order: $order->id");
             }
-        }
-    }
 
-    public function instantiateForSendingRequest()
-    {
-        $this->client = new Client();
 
-        if (!empty($_SESSION['lang']) && in_array($_SESSION['lang'], $this->languages)) {
-            $this->language = $_SESSION['lang'];
-        } else {
-            $this->language = 'az';
+            return $this->orderService->getReceipt($order->id, $userId, 'Payment successful');
         }
 
-        return $this;
-    }
+        handleTransaction(fn() => OrderStatus::create([
+            'order_id' => $order->id,
+            'status' => OrderStatusEnum::FAILED,
+        ]));
 
-    public function sign($json_data)
-    {
-        $this->data = base64_encode(json_encode($json_data));
-
-        $this->signature = base64_encode(sha1("{$this->private_key}{$this->data}{$this->private_key}", true));
-    }
-
-    public function createSignatureByData()
-    {
-        return base64_encode(sha1("{$this->private_key}{$this->data}{$this->private_key}", true));
-    }
-
-    public function isSignatureValid()
-    {
-        return $this->signature === $this->createSignatureByData();
-    }
-
-    public function getDataAsJson()
-    {
-        return base64_decode($this->data);
-    }
-
-    public function getDataAsObject()
-    {
-        return json_decode(base64_decode($this->data));
-    }
-
-    public function generatePaymentUrlWithTypingCard()
-    {
-        $json_data = [
-            'public_key' => $this->public_key,
-            'language' => $this->language,
-            'amount' => $this->amount,
-            'currency' => $this->currency,
-            'order_id' => $this->order_id,
-            'description' => $this->description,
-            'success_redirect_url' => $this->success_redirect_url,
-            'error_redirect_url' => $this->error_redirect_url,
-        ];
-
-        $this->sign($json_data);
-
-        $response = $this->client->request('POST', 'https://epoint.az/api/1/request', [
-            'form_params' => [
-                'data' => $this->data,
-                'signature' => $this->signature,
-            ]
+        return responseHelper('Payment failed', 403, [
+            'order_id' => $order->id,
+            'status' => OrderStatusEnum::FAILED,
+            'response' => $response,
         ]);
-
-        $this->response = json_decode($response->getBody());
-
-        return $this;
     }
 
-    public function getStatus()
+    public function error(Request $request)
     {
-        $json_data = [
-            'public_key' => $this->public_key,
-        ];
+        $transactionId = $request->query('transaction_id');
 
-        if ($this->order_id) {
-            $json_data['order_id'] = $this->order_id;
+        $order = Order::where('transaction_id', $transactionId)->first();
+
+        if (!$order) {
+            return responseHelper('Order not found', 404);
         }
 
-        if ($this->epoint_transaction) {
-            $json_data['transaction'] = $this->epoint_transaction;
-        }
+        handleTransaction(fn() => OrderStatus::create([
+            'order_id' => $order->id,
+            'status' => OrderStatusEnum::FAILED,
+        ]));
 
-        $this->sign($json_data);
-
-        $response = $this->client->request('POST', 'https://epoint.az/api/1/get-status', [
-            'form_params' => [
-                'data' => $this->data,
-                'signature' => $this->signature,
-            ]
+        return responseHelper('Payment failed', 500, [
+            'order_id' => $order->id,
+            'status' => OrderStatusEnum::FAILED->label()
         ]);
-
-        $this->response = json_decode($response->getBody());
-
-        return $this;
     }
 
-    public function registerCardForPayment()
+    public function result(Request $request)
     {
-        $json_data = [
-            'public_key' => $this->public_key,
-            'language' => $this->language,
-            'refund' => 0,
-            'description' => $this->description,
-            'success_redirect_url' => $this->success_redirect_url,
-            'error_redirect_url' => $this->error_redirect_url,
-        ];
+        Log::error('result');
+        $transactionId = $request->query('transaction_id');
+        //   $transactionId = 'EAF4DDC6-5326-4EC9-A833-20EB2C87DC5E';
 
-        $this->sign($json_data);
+        $order = Order::where('transaction_id', $transactionId)->first();
+        if (!$order) {
+            return responseHelper('Order not found', 403);
+        }
 
-        $response = $this->client->request('POST', "https://epoint.az/api/1/card-registration", [
-            'form_params' => [
-                'data' => $this->data,
-                'signature' => $this->signature,
-            ]
+        $response = EPointService::checkPayment(
+            env('EPOINT_PRIVATE_KEY'),
+            env('EPOINT_PUBLIC_KEY'),
+            $order->id
+        );
+
+        $success = isset($response->code) && (string)$response->code === '000';
+        $amountPaid = $response->amount ?? 0;
+
+        if ($success) {
+            if (!$order->paid_at) {
+                $order->update([
+                    'paid_at' => now(),
+                ]);
+
+                handleTransaction(fn() => OrderStatus::create([
+                    'order_id' => $order->id,
+                    'status' => OrderStatusEnum::PLACED,
+                ]));
+
+                $userId = $order->user_id;
+
+                $this->balanceService->callbackDeposit($userId, $amountPaid, "Added amount to balance for order: $order->id");
+                $this->balanceService->withdraw($userId, $amountPaid, "Removed amount to balance for order: $order->id");
+            }
+
+            return responseHelper('Payment successful', 200, [
+                'order_id' => $order->id,
+                'status' => OrderStatusEnum::PLACED,
+                'amount_paid' => $amountPaid,
+            ]);
+        }
+
+        handleTransaction(fn() => OrderStatus::create([
+            'order_id' => $order->id,
+            'status' => OrderStatusEnum::FAILED,
+        ]));
+
+        return responseHelper('Payment failed', 403, [
+            'order_id' => $order->id,
+            'status' => OrderStatusEnum::FAILED->label(),
+            'response' => $response,
         ]);
-
-        $this->response = json_decode($response->getBody());
-
-        return $this;
-    }
-
-    public function registerCardForRefund()
-    {
-        $json_data = [
-            'public_key' => $this->public_key,
-            'language' => $this->language,
-            'refund' => 1,
-            'description' => $this->description,
-            'success_redirect_url' => $this->success_redirect_url,
-            'error_redirect_url' => $this->error_redirect_url,
-        ];
-
-        $this->sign($json_data);
-
-        $response = $this->client->request('POST', "https://epoint.az/api/1/card-registration", [
-            'form_params' => [
-                'data' => $this->data,
-                'signature' => $this->signature,
-            ]
-        ]);
-
-        $this->response = json_decode($response->getBody());
-
-        return $this;
-    }
-
-    public function payWithSavedCard()
-    {
-        $json_data = [
-            'public_key' => $this->public_key,
-            'language' => $this->language,
-            'card_uid' => $this->card_uid,
-            'order_id' => $this->order_id,
-            'amount' => $this->amount,
-            'description' => $this->description,
-            'currency' => $this->currency,
-        ];
-
-        $this->sign($json_data);
-
-        $response = $this->client->request('POST', 'https://epoint.az/api/1/execute-pay', [
-            'form_params' => [
-                'data' => $this->data,
-                'signature' => $this->signature,
-            ]
-        ]);
-
-        $this->response = json_decode($response->getBody());
-
-        return $this;
-    }
-
-    public function cancelPayment()
-    {
-        $json_data = [
-            'public_key' => $this->public_key,
-            'language' => $this->language,
-            'transaction' => $this->epoint_transaction,
-            'currency' => $this->currency,
-        ];
-
-        if ($this->amount) {
-            $json_data['amount'] = $this->amount;
-        }
-
-        $this->sign($json_data);
-
-        $response = $this->client->request('POST', 'https://epoint.az/api/1/reverse', [
-            'form_params' => [
-                'data' => $this->data,
-                'signature' => $this->signature,
-            ]
-        ]);
-
-        $this->response = json_decode($response->getBody());
-
-        return $this;
-    }
-
-    public function refundPayment()
-    {
-        $json_data = [
-            'public_key' => $this->public_key,
-            'language' => $this->language,
-            'card_uid' => $this->card_uid,
-            'order_id' => $this->order_id,
-            'amount' => $this->amount,
-            'currency' => $this->currency,
-            'description' => $this->description,
-        ];
-
-        $this->sign($json_data);
-
-        $response = $this->client->request('POST', 'https://epoint.az/api/1/refund-request', [
-            'form_params' => [
-                'data' => $this->data,
-                'signature' => $this->signature,
-            ]
-        ]);
-
-        $this->response = json_decode($response->getBody());
-
-        return $this;
-    }
-
-    public static function instantiate($private_key, $public_key)
-    {
-        $epoint = new self([
-            "private_key" => $private_key,
-            "public_key" => $public_key
-        ]);
-        $epoint->instantiateForSendingRequest();
-        return $epoint;
-    }
-
-    public static function checkPayment($private_key, $public_key, $uid, $epoint_transaction = false)
-    {
-        $epoint = static::instantiate($private_key, $public_key);
-
-        if ($epoint_transaction) {
-            $epoint->epoint_transaction = $uid;
-        } else {
-            $epoint->order_id = $uid;
-        }
-
-        $epoint->getStatus();
-
-        return $epoint->response;
-    }
-
-    public static function typeCard($private_key, $public_key, $order_id, $amount, $description, $success_redirect_url = null, $error_redirect_url = null)
-    {
-        $epoint = static::instantiate($private_key, $public_key);
-
-        $epoint->order_id = $order_id;
-        $epoint->amount = $amount;
-        $epoint->description = $description;
-
-        if ($success_redirect_url) {
-            $epoint->success_redirect_url = $success_redirect_url;
-        }
-
-        if ($error_redirect_url) {
-            $epoint->error_redirect_url = $error_redirect_url;
-        }
-
-        $epoint->generatePaymentUrlWithTypingCard();
-
-        return $epoint->response;
-    }
-
-    public static function saveCardForPayment($private_key, $public_key, $description, $success_redirect_url = null, $error_redirect_url = null)
-    {
-        $epoint = static::instantiate($private_key, $public_key);
-
-        $epoint->description = $description;
-
-        if ($success_redirect_url) {
-            $epoint->success_redirect_url = $success_redirect_url;
-        }
-
-        if ($error_redirect_url) {
-            $epoint->error_redirect_url = $error_redirect_url;
-        }
-
-        $epoint->registerCardForPayment();
-
-        return $epoint->response;
-    }
-
-    public static function saveCardForRefund($private_key, $public_key, $description, $success_redirect_url = null, $error_redirect_url = null)
-    {
-        $epoint = static::instantiate($private_key, $public_key);
-
-        $epoint->description = $description;
-
-        if ($success_redirect_url) {
-            $epoint->success_redirect_url = $success_redirect_url;
-        }
-
-        if ($error_redirect_url) {
-            $epoint->error_redirect_url = $error_redirect_url;
-        }
-
-        $epoint->registerCardForRefund();
-
-        return $epoint->response;
-    }
-
-    public static function payWithSaved($private_key, $public_key, $card_uid, $order_id, $amount, $description)
-    {
-        $epoint = static::instantiate($private_key, $public_key);
-
-        $epoint->card_uid = $card_uid;
-        $epoint->order_id = $order_id;
-        $epoint->amount = $amount;
-        $epoint->description = $description;
-
-        $epoint->payWithSavedCard();
-
-        return $epoint->response;
-    }
-
-    /*
-     * if $amount is not given all amount per transaction will return to the card
-     * */
-    public static function cancel($private_key, $public_key, $epoint_transaction, $amount = null)
-    {
-        $epoint = static::instantiate($private_key, $public_key);
-
-        $epoint->epoint_transaction = $epoint_transaction;
-
-        if ($amount) {
-            $epoint->amount = $amount;
-        }
-
-        $epoint->cancelPayment();
-
-        return $epoint->response;
-    }
-
-    public static function refund($private_key, $public_key, $card_uid, $order_id, $amount, $description)
-    {
-        $epoint = static::instantiate($private_key, $public_key);
-
-        $epoint->card_uid = $card_uid;
-        $epoint->order_id = $order_id;
-        $epoint->amount = $amount;
-        $epoint->description = $description;
-
-        $epoint->refundPayment();
-
-        return $epoint->response;
     }
 }

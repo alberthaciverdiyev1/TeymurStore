@@ -20,6 +20,9 @@ return new class extends Migration {
 
             $table->string('type')->default(BalanceType::DEPOSIT->value);
 
+            $table->string('transaction_e_point')->nullable();
+            $table->string('transaction_order')->nullable();
+
             $table->text('note')->nullable();
             $table->timestamps();
             $table->softDeletes();
