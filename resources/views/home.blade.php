@@ -207,103 +207,37 @@
             <h2 id="faq-title" class="section-title">Tez-tez verilən suallar</h2>
 
             <div class="accordion" role="region" aria-label="Tez-tez verilən suallar">
-                <div class="accordion-item">
-                    <button class="accordion-button" aria-expanded="false" aria-controls="faq1">
-                        <span class="accordion-title">Tətbiqi necə yükləyə bilərəm?</span>
-                        <svg class="accordion-icon" viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
-                        </svg>
-                    </button>
-                    <div class="accordion-content" id="faq1">
-                        <p>Tətbiqi App Store və ya Google Play mağazalarından pulsuz yükləyə bilərsiniz. Sadəcə mağazada
-                            "Teymur Store" axtarın və yükləməyə başlayın. Quraşdırma prosesi avtomatik olaraq başlayacaq
-                            və bir neçə saniyə ərzində tamamlanacaq.</p>
-                    </div>
-                </div>
 
-                <div class="accordion-item">
-                    <button class="accordion-button" aria-expanded="false" aria-controls="faq2">
-                        <span class="accordion-title">Ödənişlər təhlükəsizdirmi?</span>
-                        <svg class="accordion-icon" viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
-                        </svg>
-                    </button>
-                    <div class="accordion-content" id="faq2">
-                        <p>Bəli, bütün ödənişlər SSL şifrələməsi ilə qorunur və beynəlxalq standartlara uyğundur. Kredit
-                            kartı məlumatlarınız heç vaxt bizim serverlərdə saxlanılmır. Visa, Mastercard və digər
-                            məşhur ödəniş sistemlərini dəstəkləyirik.</p>
+                @forelse($faqs as $key=>$faq)
+                    <div class="accordion-item">
+                        <button class="accordion-button" aria-expanded="false" aria-controls="{{'faq'.($key+1)}}">
+                            <span class="accordion-title">{{$faq['title']}}</span>
+                            <svg class="accordion-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+                            </svg>
+                        </button>
+                        <div class="accordion-content" id="{{'faq'.($key+1)}}">
+                            <p>{{$faq['description']}}</p>
+                        </div>
                     </div>
-                </div>
+                @empty
+                    <div class="accordion-item">
+                        <button class="accordion-button" aria-expanded="false" aria-controls="faq1">
+                            <span class="accordion-title">Tətbiqi necə yükləyə bilərəm?</span>
+                            <svg class="accordion-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+                            </svg>
+                        </button>
+                        <div class="accordion-content" id="faq1">
+                            <p>Tətbiqi App Store və ya Google Play mağazalarından pulsuz yükləyə bilərsiniz. Sadəcə
+                                mağazada
+                                "Teymur Store" axtarın və yükləməyə başlayın. Quraşdırma prosesi avtomatik olaraq
+                                başlayacaq
+                                və bir neçə saniyə ərzində tamamlanacaq.</p>
+                        </div>
+                    </div>
+                @endforelse
 
-                <div class="accordion-item">
-                    <button class="accordion-button" aria-expanded="false" aria-controls="faq3">
-                        <span class="accordion-title">Çatdırılma nə qədər vaxt aparır?</span>
-                        <svg class="accordion-icon" viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
-                        </svg>
-                    </button>
-                    <div class="accordion-content" id="faq3">
-                        <p>Standart çatdırılma 1-3 iş günü ərzində həyata keçirilir. Ekspress çatdırılma seçimi ilə
-                            sifarişinizi daha tez ala bilərsiniz - bu halda çatdırılma 24 saat ərzində baş verir.
-                            Çatdırılma statusunu tətbiqdən real vaxt rejimində izləyə bilərsiniz.</p>
-                    </div>
-                </div>
-
-                <div class="accordion-item">
-                    <button class="accordion-button" aria-expanded="false" aria-controls="faq4">
-                        <span class="accordion-title">Geri qaytarma siyasəti necədir?</span>
-                        <svg class="accordion-icon" viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
-                        </svg>
-                    </button>
-                    <div class="accordion-content" id="faq4">
-                        <p>Məhsulları 14 gün ərzində heç bir izahat vermədən geri qaytara bilərsiniz. Məhsul istifadə
-                            olunmamış və orijinal qablaşdırmasında olmalıdır. Geri qaytarma prosesi tətbiq vasitəsilə
-                            sadə bir neçə addımda həyata keçirilir.</p>
-                    </div>
-                </div>
-
-                <div class="accordion-item">
-                    <button class="accordion-button" aria-expanded="false" aria-controls="faq5">
-                        <span class="accordion-title">Dəstək ilə necə əlaqə saxlayım?</span>
-                        <svg class="accordion-icon" viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
-                        </svg>
-                    </button>
-                    <div class="accordion-content" id="faq5">
-                        <p>Müştəri dəstək komandamız 24/7 sizə xidmət göstərir. Tətbiqdəki canlı söhbət funksiyasından
-                            istifadə edə, e-poçt göndərə və ya telefon edə bilərsiniz. Ortalama cavab müddətimiz 15
-                            dəqiqədən azdır.</p>
-                    </div>
-                </div>
-
-                <div class="accordion-item">
-                    <button class="accordion-button" aria-expanded="false" aria-controls="faq6">
-                        <span class="accordion-title">Hansı ödəniş üsullarını qəbul edirsiniz?</span>
-                        <svg class="accordion-icon" viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
-                        </svg>
-                    </button>
-                    <div class="accordion-content" id="faq6">
-                        <p>Biz müxtəlif ödəniş üsullarını dəstəkləyirik: kredit kartları (Visa, Mastercard), debet
-                            kartları, bank köçürmələri və nağd ödəniş çatdırılma zamanı. Həmçinin Apple Pay və Google
-                            Pay kimi mobil ödəniş sistemlərini də qəbul edirik.</p>
-                    </div>
-                </div>
-
-                <div class="accordion-item">
-                    <button class="accordion-button" aria-expanded="false" aria-controls="faq7">
-                        <span class="accordion-title">Sifarişimi izləyə bilərəmmi?</span>
-                        <svg class="accordion-icon" viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
-                        </svg>
-                    </button>
-                    <div class="accordion-content" id="faq7">
-                        <p>Əlbəttə! Hər sifarişə unikal izləmə nömrəsi verilir və siz onu tətbiqdən və ya veb saytdan
-                            real vaxt rejimində izləyə bilərsiniz. Sifarişinizin hər mərhələsi haqqında bildiriş
-                            alacaqsınız - hazırlanma, yola düşmə və çatdırılma mərhələləri.</p>
-                    </div>
-                </div>
             </div>
         </div>
     </section>
@@ -324,7 +258,7 @@
                             </svg>
                         </div>
                         <h3 class="contact-card-title">E-poçt</h3>
-                        <a href="mailto:info@teymurstore.az" class="contact-link">info@teymurstore.az</a>
+                        <a href="mailto:{{$setting['email'] ?? 'info@teymurstore.az'}}" class="contact-link">{{$setting['email'] ?? 'info@teymurstore.az'}}</a>
                     </div>
 
                     <div class="contact-card">
@@ -335,7 +269,8 @@
                             </svg>
                         </div>
                         <h3 class="contact-card-title">Telefon</h3>
-                        <a href="tel:+994708990999" class="contact-link">+994 70 899 09 99</a>
+                        @php( $phoneNumber = $setting['phone_number_1'] ??($setting['phone_number_2'] ?? ($setting['phone_number_3'] ?? ($setting['phone_number_4'] ?? '+994708990999'))))
+                        <a href="{{'tel:'.$phoneNumber}}" class="contact-link">{{$phoneNumber}}</a>
                     </div>
 
                     <div class="contact-card">
@@ -346,7 +281,7 @@
                             </svg>
                         </div>
                         <h3 class="contact-card-title">Ünvan</h3>
-                        <p class="contact-text">Əhmədli, Seyid Əzim Şirvani 1B</p>
+                        <p class="contact-text">{{$setting['address'] ?? 'Əhmədli, Seyid Əzim Şirvani 1B'}}</p>
                     </div>
                 </div>
 
@@ -394,21 +329,21 @@
             </div>
 
             <div class="social-links">
-                <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" class="social-link"
+                <a href="{{$setting['instagram_url'] ?? 'https://facebook.com'}}" target="_blank" rel="noopener noreferrer" class="social-link"
                    aria-label="Facebook səhifəmiz">
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                         <path
                             d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z"/>
                     </svg>
                 </a>
-                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="social-link"
+                <a href="{{$setting['instagram_url'] ?? 'https://instagram.com'}}" target="_blank" rel="noopener noreferrer" class="social-link"
                    aria-label="Instagram səhifəmiz">
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                         <path
                             d="M7.8 2h8.4C19.4 2 22 4.6 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8C4.6 22 2 19.4 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2m-.2 2A3.6 3.6 0 0 0 4 7.6v8.8C4 18.39 5.61 20 7.6 20h8.8a3.6 3.6 0 0 0 3.6-3.6V7.6C20 5.61 18.39 4 16.4 4H7.6m9.65 1.5a1.25 1.25 0 0 1 1.25 1.25A1.25 1.25 0 0 1 17.25 8 1.25 1.25 0 0 1 16 6.75a1.25 1.25 0 0 1 1.25-1.25M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/>
                     </svg>
                 </a>
-                <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" class="social-link"
+                <a href="{{$setting['tiktok_url'] ?? 'https://twitter.com'}}" target="_blank" rel="noopener noreferrer" class="social-link"
                    aria-label="Twitter səhifəmiz">
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                         <path
