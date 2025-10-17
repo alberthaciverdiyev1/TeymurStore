@@ -44,12 +44,11 @@ class GoogleAuthService
 
         $idToken = $request->token;
 
-//        $client = new Google_Client(['client_id' => env('GOOGLE_CLIENT_ID')]);
-        $client = new Google_Client(['client_id' => '1056792866201-a1re1itft0its6vjvm2bv3n9evakl1ra.apps.googleusercontent.com']);
+        $client = new Google_Client(['client_id' => env('GOOGLE_CLIENT_ID')]);
         $payload = $client->verifyIdToken($idToken);
 
         if (!$payload) {
-            return response()->json(['error' => 'Invalid Google ID Token'], 403);
+            return response()->json(['error' => __('Invalid Google ID Token')], 403);
         }
 
         $password = bcrypt(Str::random(16));
@@ -71,7 +70,7 @@ class GoogleAuthService
 
         return response()->json([
             'status' => StatusCode::HTTP_OK,
-            'message' => StatusCode::$statusTexts[StatusCode::HTTP_OK],
+            'message' => __(StatusCode::$statusTexts[StatusCode::HTTP_OK]),
             'data' => [
                 'token' => $apiToken,
                 'user' => $user->only(['id', 'name', 'email']),
