@@ -22,6 +22,9 @@ class BalanceService
     public function deposit($request): JsonResponse
     {
         $validated = $request->validated();
+
+        $validated['user_id'] = $validated['user_id'] ?? auth()->id();
+
         return handleTransaction(
             fn() => $this->model->create([
                 'user_id' => $validated['user_id'],
@@ -33,7 +36,8 @@ class BalanceService
             BalanceResource::class
         );
     }
-    public function callbackDeposit($userId,$amount,$note): JsonResponse
+
+    public function callbackDeposit($userId, $amount, $note): JsonResponse
     {
         return handleTransaction(
             fn() => $this->model->create([
@@ -92,7 +96,7 @@ class BalanceService
                 END
             "));
 
-        return responseHelper('Balance retrieved successfully.',200,[
+        return responseHelper('Balance retrieved successfully.', 200, [
             'user_id' => $userId,
             'balance' => $totalBalance,
         ]);
@@ -108,6 +112,6 @@ class BalanceService
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return responseHelper('Balance history retrieved successfully.',200,BalanceResource::collection($history));
+        return responseHelper('Balance history retrieved successfully.', 200, BalanceResource::collection($history));
     }
 }
