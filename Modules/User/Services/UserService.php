@@ -104,7 +104,7 @@ class UserService
 
         return response()->json([
             'success' => 200,
-            'user' => UserResource::make($users),
+            'user' => UserResource::collection($users),
         ]);
     }
 
