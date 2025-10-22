@@ -39,7 +39,7 @@ class BrandService
                 $query->where('is_active', 1);
             }
 
-            return $query->orderBy('created_at', 'desc')->paginate(20);
+            return $query->orderBy('id', 'desc')->paginate(20);
         });
 
         return responseHelper('Brands retrieved successfully.',200, BrandResource::collection($data));
