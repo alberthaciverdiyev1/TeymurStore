@@ -14,20 +14,20 @@ class PermissionDatabaseSeeder extends Seeder
     {
         $allPermissions = [
             'banner' => [
-                'view banners',
+           //     'view banners',
                 'add banner',
                 'delete banner',
             ],
             'brands' => [
-                'view brands',
+              //  'view brands',
                 'add brand',
                 'details brand',
                 'update brand',
                 'delete brand',
             ],
             'categories' => [
-                'view categories',
-                'view categories-with-products',
+              //  'view categories',
+               // 'view categories-with-products',
                 'add category',
                 'details category',
                 'update category',
@@ -81,9 +81,9 @@ class PermissionDatabaseSeeder extends Seeder
                 'history balance',
             ],
             'products' => [
-                'view products',
+                //'view products',
                 'add product',
-                'details product',
+            //    'details product',
                 'update product',
                 'delete product',
                 'statistics product',

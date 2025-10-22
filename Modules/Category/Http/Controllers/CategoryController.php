@@ -17,8 +17,8 @@ class CategoryController extends Controller
 
     public function __construct(CategoryService $service)
     {
-        $this->middleware('permission:view categories')->only('list');
-        $this->middleware('permission:view categories-with-products')->only('listWithProducts');
+       // $this->middleware('permission:view categories')->only('list');
+       // $this->middleware('permission:view categories-with-products')->only('listWithProducts');
         $this->middleware('permission:add category')->only('add');
         $this->middleware('permission:details category')->only('details');
         $this->middleware('permission:update category')->only('update');

@@ -16,8 +16,8 @@ use Illuminate\Http\Request;
 
 Route::prefix('brand')->controller(\Modules\Brand\Http\Controllers\BrandController::class)->group(function () {
 
+    Route::get('/', 'list')->name('category.list');
     Route::middleware('auth:sanctum')->group(function () {
-        Route::get('/', 'list')->name('category.list');
         Route::post('/', 'add')->name('brand.add');
         Route::get('/{id}', 'details')->name('brand.details');
         Route::put('/{id}', 'update')->name('brand.update');

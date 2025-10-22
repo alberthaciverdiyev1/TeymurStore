@@ -17,9 +17,9 @@ class ProductController extends Controller
 
     public function __construct(ProductService $service)
     {
-        $this->middleware('permission:view products')->only('list');
+      //  $this->middleware('permission:view products')->only('list');
         $this->middleware('permission:add product')->only('add');
-        $this->middleware('permission:details product')->only('details');
+       // $this->middleware('permission:details product')->only('details');
         $this->middleware('permission:update product')->only('update');
         $this->middleware('permission:delete product')->only('delete');
         $this->middleware('permission:statistics product')->only('statistics');

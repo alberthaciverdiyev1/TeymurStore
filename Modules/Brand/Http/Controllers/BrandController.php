@@ -17,7 +17,7 @@ class BrandController extends Controller
 
     public function __construct(BrandService $service)
     {
-            $this->middleware('permission:view brands')->only('list');
+       //     $this->middleware('permission:view brands')->only('list');
             $this->middleware('permission:add brand')->only('add');
             $this->middleware('permission:details brand')->only('details');
             $this->middleware('permission:update brand')->only('update');
