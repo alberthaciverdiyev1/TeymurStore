@@ -29,9 +29,8 @@ class BrandService
         $params = $request->all();
         $cacheKey = 'brands_list_' . md5(serialize($params));
 
-      //  $data = Cache::remember($cacheKey,config('cache.brand_list_cache_time'), function () use ($params) {
-            $data = $this->model->query()->select(['id', 'name', 'image', 'is_active', 'sort_order']);
-            $query = filterLike($data, ['name'], $params);
+            $query = $this->model->query()->select(['id', 'name', 'image', 'is_active', 'sort_order']);
+            $query = filterLike($query, ['name'], $params);
 
             if (isset($params['is_active'])) {
                 $query->where('is_active', $params['is_active']);
@@ -39,22 +38,10 @@ class BrandService
                 $query->where('is_active', 1);
             }
 
-            $query->orderBy('id', 'desc')->paginate(20);
-       // });
+         $data = $query->orderBy('id', 'desc')->paginate(20);
 
         return responseHelper('Brands retrieved successfully.',200, BrandResource::collection($data));
 
-//        return response()->json([
-//            'success' => 200,
-//            'message' => __('Brands retrieved successfully.'),
-//            'data' => BrandResource::collection($data),
-//            'meta' => [
-//                'current_page' => $data->currentPage(),
-//                'last_page' => $data->lastPage(),
-//                'per_page' => $data->perPage(),
-//                'total' => $data->total(),
-//            ],
-//        ]);
     }
 
     /**
