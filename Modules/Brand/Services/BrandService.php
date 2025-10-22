@@ -31,7 +31,7 @@ class BrandService
 
       //  $data = Cache::remember($cacheKey,config('cache.brand_list_cache_time'), function () use ($params) {
             $data = $this->model->query()->select(['id', 'name', 'image', 'is_active', 'sort_order']);
-            $query = filterLike($query, ['name'], $params);
+            $query = filterLike($data, ['name'], $params);
 
             if (isset($params['is_active'])) {
                 $query->where('is_active', $params['is_active']);
