@@ -174,6 +174,21 @@ class ProductService
     public function add($request): JsonResponse
     {
         $data = $request->validated();
+        if (!isset($data['sku'])){
+            $lastProduct = $this->model->orderByDesc('id')->first();
+            if ($lastProduct && preg_match('/P(\d+)/', $lastProduct->sku, $matches)) {
+                $nextNumber = (int)$matches[1] + 1;
+            } else {
+                $nextNumber = 1;
+            }
+
+            $data['sku'] = 'P' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
+
+            while ($this->model->where('sku', $data['sku'])->exists()) {
+                $nextNumber++;
+                $data['sku'] = 'P' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
+            }
+        }
 
         $product = handleTransaction(function () use ($data, $request) {
             $images_arr = $request->hasFile('images') ? $request->file('images') : [];

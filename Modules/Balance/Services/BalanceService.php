@@ -8,6 +8,7 @@ use App\Enums\BalanceType;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\JsonResponse;
 use Modules\Balance\Http\Resources\BalanceResource;
+use Modules\Payment\Service\EPointService;
 
 class BalanceService
 {
@@ -21,20 +22,32 @@ class BalanceService
 
     public function deposit($request): JsonResponse
     {
-        $validated = $request->validated();
 
-        $validated['user_id'] = $validated['user_id'] ?? auth()->id();
-
-        return handleTransaction(
-            fn() => $this->model->create([
-                'user_id' => $validated['user_id'],
-                'type' => BalanceType::DEPOSIT->value,
-                'amount' => (float)$validated['amount'],
-                'note' => $validated['note'] ?? null,
-            ])->refresh(),
-            'Balance deposited successfully.',
-            BalanceResource::class
-        );
+        return "google.com";
+//        $validated = $request->validated();
+//
+//        $paymentResponse = EPointService::typeCard(
+//            env('EPOINT_PRIVATE_KEY'),
+//            env('EPOINT_PUBLIC_KEY'),
+//            $orderId,
+//            (float)$validated['amount'],
+//            "Payment for order #{$orderId}",
+//            route('api.payment.success', ['transaction_id' => $validated['transaction_id']]),
+//            route('api.payment.error', ['transaction_id' => $validated['transaction_id']])
+//        );
+////
+//        $validated['user_id'] = $validated['user_id'] ?? auth()->id();
+//
+//        return handleTransaction(
+//            fn() => $this->model->create([
+//                'user_id' => $validated['user_id'],
+//                'type' => BalanceType::DEPOSIT->value,
+//                'amount' => (float)$validated['amount'],
+//                'note' => $validated['note'] ?? null,
+//            ])->refresh(),
+//            'Balance deposited successfully.',
+//            BalanceResource::class
+//        );
     }
 
     public function callbackDeposit($userId, $amount, $note): JsonResponse
@@ -95,10 +108,9 @@ class BalanceService
                     ELSE -amount
                 END
             "));
-
         return responseHelper('Balance retrieved successfully.', 200, [
             'user_id' => $userId,
-            'balance' => $totalBalance,
+            'balance' => (float)$totalBalance,
         ]);
 
     }

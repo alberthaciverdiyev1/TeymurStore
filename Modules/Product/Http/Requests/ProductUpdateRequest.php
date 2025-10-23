@@ -12,6 +12,14 @@ class ProductUpdateRequest extends FormRequest
         return true;
     }
 
+    public function prepareForValidation()
+    {
+        return $this->merge([
+            'user_id' => auth()->id()
+        ]);
+
+    }
+
     public function rules(): array
     {
         $productId = $this->route('id');
@@ -28,7 +36,7 @@ class ProductUpdateRequest extends FormRequest
             'description.tr' => ['nullable', 'string'],
 
             'sku' => [
-                'required',
+                'nullable',
                 'string',
                 'max:50',
                 Rule::unique('products', 'sku')->ignore($productId),
@@ -52,7 +60,7 @@ class ProductUpdateRequest extends FormRequest
             'sizes' => ['nullable', 'array'],
             'sizes.*' => ['exists:sizes,id'],
 
-            'images'   => ['nullable', 'array'],
+            'images' => ['nullable', 'array'],
             'images.*' => ['file', 'image', 'mimes:jpg,jpeg,png,webp,gif,svg,bmp,tiff,avif'],
         ];
     }

@@ -11,6 +11,13 @@ class ProductAddRequest extends FormRequest
     {
         return true;
     }
+    public function prepareForValidation()
+    {
+        return $this->merge([
+            'user_id' => auth()->id()
+        ]);
+
+    }
 
     public function rules(): array
     {
@@ -25,7 +32,7 @@ class ProductAddRequest extends FormRequest
             'description.ru' => ['nullable', 'string'],
             'description.tr' => ['nullable', 'string'],
 
-            'sku' => ['required', 'string', 'max:50', 'unique:products,sku'],
+            'sku' => ['nullable', 'string', 'max:50', 'unique:products,sku'],
 
             'brand_id' => ['nullable', 'exists:brands,id'],
             'gender' => ['nullable', Rule::in(['male', 'female', 'kids'])],

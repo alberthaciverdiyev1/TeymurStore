@@ -331,7 +331,8 @@ class OrderService
             }
 
             if ($pay_with_balance) {
-                $userBalance = $this->balanceService->getBalance()->getData(true)['data']['balance'] ?? 0;
+            //    $userBalance = $this->balanceService->getBalance()->getData(true)['data']['balance'] ?? 0;
+                $userBalance = $this->balanceService->getBalance()->getData(true)['balance'] ?? 0;
 
                 if ($userBalance < ($validated['total_price'] + $validated['shipping_price'])) {
                     return responseHelper('Insufficient balance to complete the order.', 403);
@@ -345,7 +346,7 @@ class OrderService
 
                 $balanceContent = $balanceResponse->getData(true);
 
-                if (!($balanceContent['success'] && $balanceContent['status_code'] === 201)) {
+                if (!($balanceContent['success'] && $balanceContent['status_code'] === 200)) {
                     return responseHelper('Failed to process payment from balance. Please try again.', 403);
                 }
                 $validated['paid_at'] = now();
@@ -386,7 +387,7 @@ class OrderService
                     $product->decrement('stock_count', $item->quantity);
                     $product->increment('sales_count', $item->quantity);
                 }
-              //  Basket::destroy($basket->pluck('id')->toArray());
+                Basket::destroy($basket->pluck('id')->toArray());
 
                 if ($appliedPromoId) {
                     \DB::table('used_promo_codes')
